@@ -1,2 +1,3 @@
-testje of commits werken
-nu nog kijken of ik kan pullen
+testje of commits 
+nog een testje of het werkt, commit en push dit lalalala
+twee commits tegelijk dit keer
