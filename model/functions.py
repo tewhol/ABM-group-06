@@ -114,7 +114,7 @@ def get_flood_depth(corresponding_map, location, band):
     -------
     depth: flood depth at the given location
     """
-    row, col = corresponding_map.index(location.x, locatifloon.y)
+    row, col = corresponding_map.index(location.x, location.y)
     depth = band[row -1, col -1]
     return depth
     
