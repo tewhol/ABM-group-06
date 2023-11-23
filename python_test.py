@@ -4,3 +4,8 @@ def HelloWorld():
 
 def HelloTIM():
     print("Hello TIM")
+
+def HelloTim():
+    print("Hello Tim")
+
+
