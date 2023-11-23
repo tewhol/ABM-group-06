@@ -114,7 +114,7 @@ def get_flood_depth(corresponding_map, location, band):
     -------
     depth: flood depth at the given location
     """
-    row, col = corresponding_map.index(location.x, location.y)
+    row, col = corresponding_map.index(location.x, locatifloon.y)
     depth = band[row -1, col -1]
     return depth
     
@@ -149,7 +149,7 @@ def calculate_basic_flood_damage(flood_depth):
     Parameters
     ----------
     flood_depth : flood depth as given by location within model domain
-
+    flood-damage, 1 is a factor, so if you have a big house there is more damage
     Returns
     -------
     flood_damage : damage factor between 0 and 1
