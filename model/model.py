@@ -63,7 +63,6 @@ class AdaptationModel(Model):
 
         # set schedule for agents
         self.schedule = RandomActivation(self)  # Schedule for activating agents
-
         # create households through initiating a household on each node of the network graph
         for i, node in enumerate(self.G.nodes()):
             household = Households(unique_id=i, model=self)
@@ -84,6 +83,7 @@ class AdaptationModel(Model):
                         "FloodDepthActual": "flood_depth_actual",
                         "FloodDamageActual" : "flood_damage_actual",
                         "IsAdapted": "is_adapted",
+                        "Conviction": "conviction",
                         "FriendsCount": lambda a: a.count_friends(radius=1),
                         "location":"location",
                         # ... other reporters ...
@@ -158,13 +158,18 @@ class AdaptationModel(Model):
 
         # Collect agent locations and statuses
         for agent in self.schedule.agents:
-            color = 'blue' if agent.is_adapted else 'red'
+            if agent.is_adapted:
+                color = 'blue' if agent.conviction > 0.5 else 'purple'
+            else:
+                color = 'yellow' if agent.conviction > 0.5 else 'red'
             ax.scatter(agent.location.x, agent.location.y, color=color, s=10, label=color.capitalize() if not ax.collections else "")
             ax.annotate(str(agent.unique_id), (agent.location.x, agent.location.y), textcoords="offset points", xytext=(0,1), ha='center', fontsize=9)
         # Create legend with unique entries
         handles, labels = ax.get_legend_handles_labels()
         by_label = dict(zip(labels, handles))
-        ax.legend(by_label.values(), by_label.keys(), title="Red: not adapted, Blue: adapted")
+        ax.legend(by_label.values(), by_label.keys(), title="Red: not adapted, no concern, Blue: adapted, "
+                                                            "concerned\n Purple: adapted, no concern, Yellow: not "
+                                                            "adapted, concerned")
 
         # Customize plot with titles and labels
         plt.title(f'Model Domain with Agents at Step {self.schedule.steps}')
