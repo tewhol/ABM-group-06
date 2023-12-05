@@ -16,11 +16,14 @@ class Households(Agent):
     In a real scenario, this would be based on actual geographical data or more complex logic.
     """
 
-    def __init__(self, unique_id, model):
+    def __init__(self, unique_id, model, radius_network):
         super().__init__(unique_id, model)
         self.is_adapted = False  # Initial adaptation status set to False
         # A randomly assigned conviction between 0 (very low) and 1 (very high), which represents fear of flooding
         self.conviction = random.uniform(0, 1)
+        self.adaption_factor = 0
+        self.radius_network = radius_network if radius_network is not None else 1
+        self.social_network = []
 
         # getting flood map values
         # Get a random location on the map
@@ -50,17 +53,32 @@ class Households(Agent):
         #calculate the actual flood damage given the actual flood depth. Flood damage is a factor between 0 and 1
         self.flood_damage_actual = calculate_basic_flood_damage(flood_depth=self.flood_depth_actual)
     
+    def find_social_network(self):
+        """Gives each agent a social network based on the size of the radius, this is a social network, not topological"""
+        self.social_network = self.model.grid.get_neighborhood(self.pos, include_center=False, radius=self.radius_network)
+
     # Function to count friends who can be influencial.
-    def count_friends(self, radius):
+    def count_friends(self):
         """Count the number of neighbors within a given radius (number of edges away). This is social relation and not spatial"""
-        friends = self.model.grid.get_neighborhood(self.pos, include_center=False, radius=radius)
-        return len(friends)
+        return len(self.social_network)
+
+    def bias_change(self):
+        # Makes the bounds of which the agent will tolerate influence from agents different them itself.
+        tolerance = 0.05
+        lower_conviction = self.conviction - tolerance if self.conviction + tolerance > 0 else 0
+        higher_conviction = self.conviction + tolerance if self.conviction + tolerance < 1 else 1
+
+        for agent in self.social_network:
+            # check for each social connection whether there is enough similarity
+            if lower_conviction < self.model.schedule.agents[agent].conviction < higher_conviction:
+                print(f'agent {self.unique_id} and {self.model.schedule.agents[agent].unique_id} are similar enough!')
 
     def step(self):
         # Logic for adaptation based on estimated flood damage and a random chance.
         # These conditions are examples and should be refined for real-world applications.
         if self.flood_damage_estimated > 0.15 and random.random() < 0.2:
             self.is_adapted = True  # Agent adapts to flooding
+        self.bias_change()
         
 # Define the Government agent class
 class Government(Agent):

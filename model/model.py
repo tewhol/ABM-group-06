@@ -65,9 +65,13 @@ class AdaptationModel(Model):
         self.schedule = RandomActivation(self)  # Schedule for activating agents
         # create households through initiating a household on each node of the network graph
         for i, node in enumerate(self.G.nodes()):
-            household = Households(unique_id=i, model=self)
+            household = Households(unique_id=i, model=self, radius_network=1)
             self.schedule.add(household)
             self.grid.place_agent(agent=household, node_id=node)
+
+        #now that the network is established, let's give each agent their connections in the social network
+        for agent in self.schedule.agents:
+            agent.find_social_network()
 
         # You might want to create other agents here, e.g. insurance agents.
 
@@ -84,7 +88,7 @@ class AdaptationModel(Model):
                         "FloodDamageActual" : "flood_damage_actual",
                         "IsAdapted": "is_adapted",
                         "Conviction": "conviction",
-                        "FriendsCount": lambda a: a.count_friends(radius=1),
+                        "FriendsCount": lambda a: a.count_friends(),
                         "location":"location",
                         # ... other reporters ...
                         }
