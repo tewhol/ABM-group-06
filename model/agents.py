@@ -21,7 +21,6 @@ class Households(Agent):
         self.is_adapted = False  # Initial adaptation status set to False
         # A randomly assigned conviction between 0 (very low) and 1 (very high), which represents fear of flooding
         self.conviction = random.uniform(0, 1)
-        self.adaption_factor = 0
         self.radius_network = radius_network if radius_network is not None else 1
         self.social_network = []
 
