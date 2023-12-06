@@ -65,11 +65,13 @@ class Households(Agent):
         return len(self.social_network)
 
     def bias_change(self):
-        # Makes the bounds of which the agent will tolerate influence from agents different them itself.
+        """"Makes the bounds of which the agent will tolerate influence from agents different them itself."""
         tolerance = 0.1
         lower_conviction = self.conviction - tolerance if self.conviction + tolerance > 0 else 0
         higher_conviction = self.conviction + tolerance if self.conviction + tolerance < 1 else 1
 
+        """For each agent it will determine the dominant opinion within their network and return this. A positive 
+        number is pro adaption, negative is against."""
         for agent in self.social_network:
             bias_network_adaption = 0
             # check for each social connection whether there is enough similarity
@@ -81,8 +83,8 @@ class Households(Agent):
         return bias_network_adaption
 
     def step(self):
-        # Logic for adaptation based on estimated flood damage and a random chance.
-        # These conditions are examples and should be refined for real-world applications.
+        """Logic for adaptation based on estimated flood damage and a random chance.
+        These conditions are examples and should be refined for real-world applications."""
         if self.flood_damage_estimated > 0.20 and random.random() < 0.2:
             self.is_adapted = True  # Agent adapts to flooding
         elif self.bias_change() > 0 and random.random() < 0.2 and self.flood_damage_estimated > 0.10:
