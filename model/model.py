@@ -162,10 +162,7 @@ class AdaptationModel(Model):
 
         # Collect agent locations and statuses
         for agent in self.schedule.agents:
-            if agent.is_adapted:
-                color = 'blue' if agent.conviction > 0.5 else 'purple'
-            else:
-                color = 'yellow' if agent.conviction > 0.5 else 'red'
+            color = 'blue' if agent.is_adapted else 'red'
             ax.scatter(agent.location.x, agent.location.y, color=color, s=10, label=color.capitalize() if not ax.collections else "")
             ax.annotate(str(agent.unique_id), (agent.location.x, agent.location.y), textcoords="offset points", xytext=(0,1), ha='center', fontsize=9)
         # Create legend with unique entries
