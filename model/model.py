@@ -72,7 +72,7 @@ class AdaptationModel(Model):
         #now that the network is established, let's give each agent their connections in the social network
         for agent in self.schedule.agents:
             agent.find_social_network()
-
+        self.set_children()
         # You might want to create other agents here, e.g. insurance agents.
 
         # Data collection setup to collect data
@@ -90,11 +90,18 @@ class AdaptationModel(Model):
                         "Conviction": "conviction",
                         "FriendsCount": lambda a: a.count_friends(),
                         "location":"location",
+                        "HasChild":"has_child"
                         # ... other reporters ...
                         }
         #set up the data collector 
         self.datacollector = DataCollector(model_reporters=model_metrics, agent_reporters=agent_metrics)
             
+    def set_children(self, number_with_children=20):
+        households_with_children = random.sample(self.schedule.agents, number_with_children)
+
+        # Stel het attribuut 'heeft_kinderen' in op True voor de geselecteerde huishoudens
+        for Households in households_with_children:
+            Households.has_child = True
 
     def initialize_network(self):
         """

@@ -16,13 +16,17 @@ class Households(Agent):
     In a real scenario, this would be based on actual geographical data or more complex logic.
     """
 
-    def __init__(self, unique_id, model, radius_network):
+    def __init__(self, unique_id, model, radius_network, has_child=False):
         super().__init__(unique_id, model)
         self.is_adapted = False  # Initial adaptation status set to False
         # A randomly assigned conviction between 0 (very low) and 1 (very high), which represents fear of flooding
         self.conviction = random.uniform(0, 1)
         self.radius_network = radius_network if radius_network is not None else 1
         self.social_network = []
+        self.wealth = random.randint(1,4) #1 is low income, 2 below average, 3 above average, 4 rich
+        self.house_type = random.randint(1,2) #1 is appartement in a flat, and 2 is vrijstaandhuis
+        self.has_child = has_child
+
 
         # getting flood map values
         # Get a random location on the map
