@@ -18,6 +18,7 @@ class Households(Agent):
 
     def __init__(self, unique_id, model, radius_network, has_child=False):
         super().__init__(unique_id, model)
+        self.bias_network_adaption = 0
         self.is_adapted = False  # Initial adaptation status set to False
         # A randomly assigned conviction between 0 (very low) and 1 (very high), which represents fear of flooding
         self.conviction = random.uniform(0, 1)
@@ -25,7 +26,7 @@ class Households(Agent):
         self.social_network = []
         self.wealth = random.randint(1,4) #1 is low income, 2 below average, 3 above average, 4 rich
         self.house_type = random.randint(1,2) #1 is appartement in a flat, and 2 is vrijstaandhuis
-        self.has_child = has_child
+        self.has_child = has_child if has_child is not None else False
 
 
         # getting flood map values
@@ -71,29 +72,37 @@ class Households(Agent):
     def bias_change(self):
         """"Makes the bounds of which the agent will tolerate influence from agents different them itself."""
         tolerance = 0.1
-        lower_conviction = self.conviction - tolerance if self.conviction + tolerance > 0 else 0
+        lower_conviction = self.conviction - tolerance if self.conviction - tolerance > 0 else 0
         higher_conviction = self.conviction + tolerance if self.conviction + tolerance < 1 else 1
 
         """For each agent it will determine the dominant opinion within their network and return this. A positive 
         number is pro adaption, negative is against."""
         for agent in self.social_network:
-            bias_network_adaption = 0
             # check for each social connection whether there is enough similarity
             if lower_conviction < self.model.schedule.agents[agent].conviction < higher_conviction:
                 if self.model.schedule.agents[agent].is_adapted:
-                    bias_network_adaption += 1
+                    self.bias_network_adaption += 1
                 else:
-                    bias_network_adaption -= 1
-        return bias_network_adaption
+                    self.bias_network_adaption -= 1
+        return self.bias_network_adaption
 
     def step(self):
         """Logic for adaptation based on estimated flood damage and a random chance.
         These conditions are examples and should be refined for real-world applications."""
-        if self.flood_damage_estimated > 0.20 and random.random() < 0.2:
-            self.is_adapted = True  # Agent adapts to flooding
-        elif self.bias_change() > 0 and random.random() < 0.2 and self.flood_damage_estimated > 0.10:
-            self.is_adapted = True  # Agent adapts to flooding
-            print(f'{self.unique_id} changed because of a similarity bias!')
+        if 0 < self.flood_damage_estimated + (self.bias_change()/10.0) < 1:
+            adaption_factor = self.flood_damage_estimated + (self.bias_change()/10.0)
+        if 0 > self.flood_damage_estimated + (self.bias_change()/10.0):
+            adaption_factor = 0
+        else:
+            adaption_factor = 1
+        if adaption_factor > 0.95:
+            self.is_adapted = True
+            print(f'{self.unique_id} adapted with a bias of {self.bias_change()/10.0} and a estimated damage of {self.flood_damage_estimated}!')
+        # if self.flood_damage_estimated > 0.20 and random.random() < 0.2:
+        #     self.is_adapted = True  # Agent adapts to flooding
+        # elif self.bias_change > 0 and random.random() < 0.2 and self.flood_damage_estimated > 0.10:
+        #     self.is_adapted = True  # Agent adapts to flooding
+        #     print(f'{self.unique_id} changed because of a similarity bias!')
         
 # Define the Government agent class
 class Government(Agent):
