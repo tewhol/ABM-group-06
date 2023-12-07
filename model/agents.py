@@ -74,7 +74,7 @@ class Households(Agent):
 
     def bias_change(self):
         """"Makes the bounds of which the agent will tolerate influence from agents different them itself."""
-        tolerance = 0.1
+        tolerance = 0.5
         lower_conviction = self.conviction - tolerance if self.conviction - tolerance > 0 else 0
         higher_conviction = self.conviction + tolerance if self.conviction + tolerance < 1 else 1
 
@@ -91,12 +91,13 @@ class Households(Agent):
     def step(self):
         """Logic for adaptation based on estimated flood damage and a random chance.
         These conditions are examples and should be refined for real-world applications."""
+        self.bias_change()
         adaption_factor = self.flood_damage_estimated + self.bias_network_adaption
         if adaption_factor < 0:
             adaption_factor = 0
         if adaption_factor > 2:
             adaption_factor = 2
-        if adaption_factor > 0.9:
+        if adaption_factor > 0.7:
             self.is_adapted = True
             print(f'{self.unique_id} adapted with a bias of {self.bias_network_adaption} and a estimated damage of {self.flood_damage_estimated}!')
         # if self.flood_damage_estimated > 0.20 and random.random() < 0.2:
