@@ -74,7 +74,7 @@ class Households(Agent):
 
     def bias_change(self):
         """"Makes the bounds of which the agent will tolerate influence from agents different them itself."""
-        tolerance = 0.1
+        tolerance = 0.3
         lower_conviction = self.conviction - tolerance if self.conviction - tolerance > 0 else 0
         higher_conviction = self.conviction + tolerance if self.conviction + tolerance < 1 else 1
 
@@ -84,21 +84,23 @@ class Households(Agent):
             # check for each social connection whether there is enough similarity
             if lower_conviction < self.model.schedule.agents[agent].conviction < higher_conviction:
                 if self.model.schedule.agents[agent].is_adapted:
-                    self.bias_network_adaption += 0.1
+                    self.bias_network_adaption += 0.05
                 else:
-                    self.bias_network_adaption -= 0.1
+                    self.bias_network_adaption -= 0.05
 
     def step(self):
         """Logic for adaptation based on estimated flood damage and a random chance.
         These conditions are examples and should be refined for real-world applications."""
+        self.bias_change()
         adaption_factor = self.flood_damage_estimated + self.bias_network_adaption
         if adaption_factor < 0:
             adaption_factor = 0
         if adaption_factor > 2:
             adaption_factor = 2
-        if adaption_factor > 0.9:
+        if adaption_factor > 0.7 and not self.is_adapted:
             self.is_adapted = True
-            print(f'{self.unique_id} adapted with a bias of {self.bias_network_adaption} and a estimated damage of {self.flood_damage_estimated}!')
+            print(f'step: {self.model.schedule.steps} : {self.unique_id} adapted with a bias of {self.bias_network_adaption}'
+                  f' and a estimated damage of {self.flood_damage_estimated}!')
         # if self.flood_damage_estimated > 0.20 and random.random() < 0.2:
         #     self.is_adapted = True  # Agent adapts to flooding
         # elif self.bias_change > 0 and random.random() < 0.2 and self.flood_damage_estimated > 0.10:
