@@ -3,6 +3,8 @@ import random
 from mesa import Agent
 from shapely.geometry import Point
 from shapely import contains_xy
+from statistics import mean
+import numpy as np
 
 # Import functions from functions.py
 from functions import generate_random_location_within_map_domain, get_flood_depth, calculate_basic_flood_damage, floodplain_multipolygon
@@ -29,7 +31,30 @@ class Households(Agent):
         # Attributes directly related to the households identity
         self.wealth = random.randint(1,4) #1 is low income, 2 below average, 3 above average, 4 rich
         self.house_type = random.randint(1,2) #1 is appartement in a flat, and 2 is vrijstaandhuis
+
         self.has_child = has_child if has_child is not None else False
+        #attribute for the age
+        mean_age = 33.7
+        std_dev_age = 5
+        self.age = max(0, int(np.random.normal(mean_age, std_dev_age)))
+        self.social_preference = random.uniform(0,1) # introvert -1 and extrovert is 1
+        self.education_level = random.randint(1, 4) # 1 low-level -  4 high level education
+        # Gemiddelde vierkante meter
+        average_square_meter = 181
+        # Stel de grootte van het huis in op basis van het gemiddelde
+        #self.house_size = random.uniform(average_square_meter - 30, average_square_meter + 30)
+        self.house_size = random.randint(1,4)
+
+        self.child_factor = 0.2 if self.has_child else 0
+
+        self.scaled_house_size = (self.house_size - 1) * 0.05
+
+        self.scaled_education_level = (self.education_level - 1) * 0.05
+
+        self.scaled_social_preference = self.social_preference * 0.2
+
+        self.scaled_age = (self.age / 100) * 0.2
+
 
 
         # getting flood map values
@@ -72,6 +97,22 @@ class Households(Agent):
         not spatial"""
         return len(self.social_network)
 
+    def calculate_similarity(self):
+
+        # self.child_factor = 0.2 if self.has_child else 0
+        #
+        # self.scaled_house_size = (self.house_size - 1) * 0.05
+        #
+        # self.scaled_education_level = (self.education_level -1) * 0.05
+        #
+        # self.scaled_social_preference = self.social_preference * 0.2
+        #
+        # self.scaled_age = (self.age/100) * 0.2
+
+        self.calculate_similarity = self.child_factor + self.scaled_house_size + self.scaled_education_level + self.scaled_social_preference + self.scaled_age
+
+
+
     def bias_change(self):
         """"Makes the bounds of which the agent will tolerate influence from agents different them itself."""
         tolerance = 0.3
@@ -106,6 +147,7 @@ class Households(Agent):
         # elif self.bias_change > 0 and random.random() < 0.2 and self.flood_damage_estimated > 0.10:
         #     self.is_adapted = True  # Agent adapts to flooding
         #     print(f'{self.unique_id} changed because of a similarity bias!')
+        self.age += 0.25
         
 # Define the Government agent class
 class Government(Agent):
