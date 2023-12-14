@@ -39,6 +39,10 @@ class AdaptationModel(Model):
                  number_of_edges = 3,
                  # number of nearest neighbours for WS social network
                  number_of_nearest_neighbours = 5,
+                 # number of households with children
+                 number_of_children = 20,
+                 # the tolerance level for each agent,
+                 agent_tolerance = 0.3
                  ):
         
         super().__init__(seed = seed)
@@ -65,15 +69,14 @@ class AdaptationModel(Model):
         self.schedule = RandomActivation(self)  # Schedule for activating agents
         # create households through initiating a household on each node of the network graph
         for i, node in enumerate(self.G.nodes()):
-            household = Households(unique_id=i, model=self, radius_network=1)
+            household = Households(unique_id=i, model=self, radius_network=1, tolerance=agent_tolerance)
             self.schedule.add(household)
             self.grid.place_agent(agent=household, node_id=node)
 
         #now that the network is established, let's give each agent their connections in the social network
         for agent in self.schedule.agents:
             agent.find_social_network()
-        self.set_children()
-        # You might want to create other agents here, e.g. insurance agents.
+        self.set_children(number_of_children)
 
         # Data collection setup to collect data
         model_metrics = {
@@ -96,7 +99,7 @@ class AdaptationModel(Model):
         #set up the data collector 
         self.datacollector = DataCollector(model_reporters=model_metrics, agent_reporters=agent_metrics)
             
-    def set_children(self, number_with_children=20):
+    def set_children(self, number_with_children):
         households_with_children = random.sample(self.schedule.agents, number_with_children)
 
         # Stel het attribuut 'heeft_kinderen' in op True voor de geselecteerde huishoudens

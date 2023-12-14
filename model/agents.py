@@ -16,13 +16,14 @@ class Households(Agent):
     In a real scenario, this would be based on actual geographical data or more complex logic.
     """
 
-    def __init__(self, unique_id, model, radius_network, has_child=False):
+    def __init__(self, unique_id, model, radius_network, tolerance, has_child=False):
         super().__init__(unique_id, model)
         self.is_adapted = False  # Initial adaptation status set to False
         # A randomly assigned conviction between 0 (very low) and 1 (very high), which represents fear of flooding
         self.conviction = random.uniform(0, 1)
         # An attribute representing the built-up bias in an agents network
         self.bias_network_adaption = 0
+        self.tolerance = tolerance
         # Attributes related to the size of one's social network, the radius and list of (friends/ friends of friends)
         self.radius_network = radius_network if radius_network is not None else 1
         self.social_network = []
