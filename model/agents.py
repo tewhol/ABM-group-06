@@ -16,13 +16,14 @@ class Households(Agent):
     In a real scenario, this would be based on actual geographical data or more complex logic.
     """
 
-    def __init__(self, unique_id, model, radius_network, tolerance, has_child=False):
+    def __init__(self, unique_id, model, radius_network, tolerance, amount_of_change_in_bias, has_child=False):
         super().__init__(unique_id, model)
         self.is_adapted = False  # Initial adaptation status set to False
         # A randomly assigned conviction between 0 (very low) and 1 (very high), which represents fear of flooding
         self.conviction = random.uniform(0, 1)
         # An attribute representing the built-up bias in an agents network
         self.bias_network_adaption = 0
+        self.amount_of_change_in_bias = amount_of_change_in_bias
         self.tolerance = tolerance
         # Attributes related to the size of one's social network, the radius and list of (friends/ friends of friends)
         self.radius_network = radius_network if radius_network is not None else 1
@@ -75,24 +76,25 @@ class Households(Agent):
 
     def bias_change(self):
         """"Makes the bounds of which the agent will tolerate influence from agents different them itself."""
-        tolerance = 0.3
-        lower_conviction = self.conviction - tolerance if self.conviction - tolerance > 0 else 0
-        higher_conviction = self.conviction + tolerance if self.conviction + tolerance < 1 else 1
+        lower_conviction = self.conviction - self.tolerance if self.conviction - self.tolerance > 0 else 0
+        higher_conviction = self.conviction + self.tolerance if self.conviction + self.tolerance < 1 else 1
 
         """For each agent it will determine the dominant opinion within their network and return this. A positive 
         number is pro adaption, negative is against."""
         for agent in self.social_network:
             # check for each social connection whether there is enough similarity
-            if lower_conviction < self.model.schedule.agents[agent].conviction < higher_conviction:
+            if lower_conviction < self.model.schedule.agents[agent].conviction < higher_conviction and random.random() < 0.5:
                 if self.model.schedule.agents[agent].is_adapted:
-                    self.bias_network_adaption += 0.05
-                else:
-                    self.bias_network_adaption -= 0.05
+                    self.bias_network_adaption += self.amount_of_change_in_bias
+                if not self.model.schedule.agents[agent].is_adapted and random.random() < 0.3:
+                    self.bias_network_adaption -= self.amount_of_change_in_bias
 
     def step(self):
         """Logic for adaptation based on estimated flood damage and a random chance.
         These conditions are examples and should be refined for real-world applications."""
         self.bias_change()
+
+        # Checking for adaption using an auxiliary adaption factor
         adaption_factor = self.flood_damage_estimated + self.bias_network_adaption
         if adaption_factor < 0:
             adaption_factor = 0
@@ -102,11 +104,6 @@ class Households(Agent):
             self.is_adapted = True
             print(f'step: {self.model.schedule.steps} : {self.unique_id} adapted with a bias of {self.bias_network_adaption}'
                   f' and a estimated damage of {self.flood_damage_estimated}!')
-        # if self.flood_damage_estimated > 0.20 and random.random() < 0.2:
-        #     self.is_adapted = True  # Agent adapts to flooding
-        # elif self.bias_change > 0 and random.random() < 0.2 and self.flood_damage_estimated > 0.10:
-        #     self.is_adapted = True  # Agent adapts to flooding
-        #     print(f'{self.unique_id} changed because of a similarity bias!')
         
 # Define the Government agent class
 class Government(Agent):

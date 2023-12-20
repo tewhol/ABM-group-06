@@ -42,7 +42,7 @@ class AdaptationModel(Model):
                  # number of households with children
                  number_of_children = 20,
                  # the tolerance level for each agent,
-                 agent_tolerance = 0.3
+                 household_tolerance = 0.2
                  ):
         
         super().__init__(seed = seed)
@@ -69,7 +69,7 @@ class AdaptationModel(Model):
         self.schedule = RandomActivation(self)  # Schedule for activating agents
         # create households through initiating a household on each node of the network graph
         for i, node in enumerate(self.G.nodes()):
-            household = Households(unique_id=i, model=self, radius_network=1, tolerance=agent_tolerance)
+            household = Households(unique_id=i, model=self, radius_network=1, amount_of_change_in_bias= 0.2 ,tolerance=household_tolerance)
             self.schedule.add(household)
             self.grid.place_agent(agent=household, node_id=node)
 
