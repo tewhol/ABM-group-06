@@ -86,7 +86,7 @@ class Households(Agent):
             if lower_conviction < self.model.schedule.agents[agent].conviction < higher_conviction and random.random() < 0.5:
                 if self.model.schedule.agents[agent].is_adapted:
                     self.bias_network_adaption += self.amount_of_change_in_bias
-                if not self.model.schedule.agents[agent].is_adapted and random.random() < 0.3:
+                if not self.model.schedule.agents[agent].is_adapted and random.random() < 0.25:
                     self.bias_network_adaption -= self.amount_of_change_in_bias
 
     def step(self):
