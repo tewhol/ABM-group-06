@@ -22,7 +22,7 @@ class Households(Agent):
         super().__init__(unique_id, model)
         self.is_adapted = False  # Initial adaptation status set to False
         # A randomly assigned conviction between 0 (very low) and 1 (very high), which represents fear of flooding
-        self.conviction = random.uniform(0, 1)
+        self.conviction = self.calculate_initial_conviction()
         # An attribute representing the built-up bias in an agents network
         self.bias_network_adaption = 0
         # Attributes related to the size of one's social network, the radius and list of (friends/ friends of friends)
@@ -31,31 +31,14 @@ class Households(Agent):
         # Attributes directly related to the households identity
         self.wealth = random.randint(1,4) #1 is low income, 2 below average, 3 above average, 4 rich
         self.house_type = random.randint(1,2) #1 is appartement in a flat, and 2 is vrijstaandhuis
-
         self.has_child = has_child if has_child is not None else False
+
         #attribute for the age
         mean_age = 33.7
         std_dev_age = 5
         self.age = max(0, int(np.random.normal(mean_age, std_dev_age)))
         self.social_preference = random.uniform(0,1) # introvert -1 and extrovert is 1
         self.education_level = random.randint(1, 4) # 1 low-level -  4 high level education
-        # Gemiddelde vierkante meter
-        average_square_meter = 181
-        # Stel de grootte van het huis in op basis van het gemiddelde
-        #self.house_size = random.uniform(average_square_meter - 30, average_square_meter + 30)
-        self.house_size = random.randint(1,4)
-
-        self.child_factor = 0.2 if self.has_child else 0
-
-        self.scaled_house_size = (self.house_size - 1) * 0.05
-
-        self.scaled_education_level = (self.education_level - 1) * 0.05
-
-        self.scaled_social_preference = self.social_preference * 0.2
-
-        self.scaled_age = (self.age / 100) * 0.2
-
-
 
         # getting flood map values
         # Get a random location on the map
@@ -97,20 +80,13 @@ class Households(Agent):
         not spatial"""
         return len(self.social_network)
 
-    def calculate_similarity(self):
-
-        # self.child_factor = 0.2 if self.has_child else 0
-        #
-        # self.scaled_house_size = (self.house_size - 1) * 0.05
-        #
-        # self.scaled_education_level = (self.education_level -1) * 0.05
-        #
-        # self.scaled_social_preference = self.social_preference * 0.2
-        #
-        # self.scaled_age = (self.age/100) * 0.2
-
-        self.calculate_similarity = self.child_factor + self.scaled_house_size + self.scaled_education_level + self.scaled_social_preference + self.scaled_age
-
+    def calculate_initial_conviction(self):
+        child_factor = 0.2 if self.has_child else 0
+        scaled_house_size = (self.house_size - 1) * 0.05
+        scaled_education_level = (self.education_level - 1) * 0.05
+        scaled_social_preference = self.social_preference * 0.2
+        scaled_age = (self.age / 100) * 0.2
+        return child_factor + scaled_house_size + scaled_education_level + scaled_social_preference + scaled_age
 
 
     def bias_change(self):
@@ -142,11 +118,6 @@ class Households(Agent):
             self.is_adapted = True
             print(f'step: {self.model.schedule.steps} : {self.unique_id} adapted with a bias of {self.bias_network_adaption}'
                   f' and a estimated damage of {self.flood_damage_estimated}!')
-        # if self.flood_damage_estimated > 0.20 and random.random() < 0.2:
-        #     self.is_adapted = True  # Agent adapts to flooding
-        # elif self.bias_change > 0 and random.random() < 0.2 and self.flood_damage_estimated > 0.10:
-        #     self.is_adapted = True  # Agent adapts to flooding
-        #     print(f'{self.unique_id} changed because of a similarity bias!')
         self.age += 0.25
         
 # Define the Government agent class
