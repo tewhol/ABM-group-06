@@ -21,7 +21,7 @@ class Households(Agent):
     def __init__(self, unique_id, model, radius_network, tolerance, amount_of_change_in_bias, has_child=False):
         super().__init__(unique_id, model)
         self.is_adapted = False  # Initial adaptation status set to False
-        # A randomly assigned conviction between 0 (very low) and 1 (very high), which represents fear of flooding
+        # This function creates the initial conviction value based on a households attribute
         self.conviction = self.calculate_initial_conviction()
         # An attribute representing the built-up bias in an agents network
         self.bias_network_adaption = 0
@@ -33,6 +33,7 @@ class Households(Agent):
         # Attributes directly related to the households identity
         self.wealth = random.randint(1,4) #1 is low income, 2 below average, 3 above average, 4 rich
         self.house_type = random.randint(1,2) #1 is appartement in a flat, and 2 is vrijstaandhuis
+        self.house_size = random.randint(1,4)
         self.has_child = has_child if has_child is not None else False
 
         #attribute for the age
