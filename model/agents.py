@@ -21,15 +21,16 @@ class Households(Agent):
     def __init__(self, unique_id, model, radius_network, tolerance, amount_of_change_in_bias, has_child=False):
         super().__init__(unique_id, model)
         self.is_adapted = False  # Initial adaptation status set to False
-        # This function creates the initial conviction value based on a households attribute
-        self.conviction = self.calculate_initial_conviction()
+
         # An attribute representing the built-up bias in an agents network
         self.bias_network_adaption = 0
         self.amount_of_change_in_bias = amount_of_change_in_bias
         self.tolerance = tolerance
+
         # Attributes related to the size of one's social network, the radius and list of (friends/ friends of friends)
         self.radius_network = radius_network if radius_network is not None else 1
         self.social_network = []
+
         # Attributes directly related to the households identity
         self.wealth = random.randint(1,4) #1 is low income, 2 below average, 3 above average, 4 rich
         self.house_type = random.randint(1,2) #1 is appartement in a flat, and 2 is vrijstaandhuis
@@ -71,6 +72,9 @@ class Households(Agent):
         
         #calculate the actual flood damage given the actual flood depth. Flood damage is a factor between 0 and 1
         self.flood_damage_actual = calculate_basic_flood_damage(flood_depth=self.flood_depth_actual)
+
+        # This function creates the initial conviction value based on a households attribute
+        self.conviction = self.calculate_initial_conviction()
 
     def find_social_network(self):
         """Gives each agent a social network based on the size of the radius, this is a social network,
