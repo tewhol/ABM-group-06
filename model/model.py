@@ -42,7 +42,7 @@ class AdaptationModel(Model):
                  # number of households with children
                  number_of_children = 20,
                  # the tolerance level for each agent,
-                 household_tolerance = 0.2
+                 household_tolerance = 0.05
                  ):
         
         super().__init__(seed = seed)
