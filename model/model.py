@@ -42,12 +42,15 @@ class AdaptationModel(Model):
                  # number of households with children
                  number_of_children = 20,
                  # the tolerance level for each agent,
-                 household_tolerance = 0.05
+                 household_tolerance = 0.05,
+                 # time of flood
+                 flood_time_tick = 5
                  ):
         
         super().__init__(seed = seed)
         
         # defining the variables and setting the values
+        self.flood_time_tick = flood_time_tick
         self.number_of_households = number_of_households  # Total number of household agents
         self.seed = seed
 
@@ -69,7 +72,7 @@ class AdaptationModel(Model):
         self.schedule = RandomActivation(self)  # Schedule for activating agents
         # create households through initiating a household on each node of the network graph
         for i, node in enumerate(self.G.nodes()):
-            household = Households(unique_id=i, model=self, radius_network=1, amount_of_change_in_bias= 0.2 ,tolerance=household_tolerance)
+            household = Households(unique_id=i, model=self, radius_network=1, bias_change_per_tick= 0.2 ,tolerance=household_tolerance)
             self.schedule.add(household)
             self.grid.place_agent(agent=household, node_id=node)
 
@@ -198,12 +201,13 @@ class AdaptationModel(Model):
         assume local flooding instead of global flooding). The actual flood depth can be 
         estimated differently
         """
-        if self.schedule.steps == 5:
+        if self.schedule.steps == self.flood_time_tick:
             for agent in self.schedule.agents:
-                # Calculate the actual flood depth as a random number between 0.5 and 1.2 times the estimated flood depth
+                # Calculate actual flood depth as a random number between 0.5 and 1.2 times the estimated flood depth
                 agent.flood_depth_actual = random.uniform(0.5, 1.2) * agent.flood_depth_estimated
                 # calculate the actual flood damage given the actual flood depth
                 agent.flood_damage_actual = calculate_basic_flood_damage(agent.flood_depth_actual)
+                agent.actual_flood_impact_on_bias = agent.flood_damage_actual - agent.flood_damage_estimated
         
         # Collect data and advance the model by one step
         self.datacollector.collect(self)

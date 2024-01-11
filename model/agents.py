@@ -18,13 +18,14 @@ class Households(Agent):
     In a real scenario, this would be based on actual geographical data or more complex logic.
     """
 
-    def __init__(self, unique_id, model, radius_network, tolerance, amount_of_change_in_bias, has_child=False):
+    def __init__(self, unique_id, model, radius_network, tolerance, bias_change_per_tick, has_child=False):
         super().__init__(unique_id, model)
         self.is_adapted = False  # Initial adaptation status set to False
+        self.actual_flood_impact_on_bias = 0  # Initial variable about how a real flood would impact an agent's bias
 
         # An attribute representing the built-up bias in an agents network
-        self.bias_network_adaption = 0
-        self.amount_of_change_in_bias = amount_of_change_in_bias
+        self.general_bias_in_network = 0
+        self.bias_change_per_tick = bias_change_per_tick
         self.tolerance = tolerance
 
         # Attributes related to the size of one's social network, the radius and list of (friends/ friends of friends)
@@ -32,17 +33,17 @@ class Households(Agent):
         self.social_network = []
 
         # Attributes directly related to the households identity
-        self.wealth = random.randint(1,4) #1 is low income, 2 below average, 3 above average, 4 rich
-        self.house_type = random.randint(1,2) #1 is appartement in a flat, and 2 is vrijstaandhuis
-        self.house_size = random.randint(1,4)
+        self.wealth = random.randint(1,4)  # 1 is low-income, 2 below average, 3 above average, 4 rich
+        self.house_type = random.randint(1,2)  # 1 is apartment in a block, and 2 is freestanding house
+        self.house_size = random.randint(1,4)  # simulating different type of sizes each house has
         self.has_child = has_child if has_child is not None else False
 
         #attribute for the age
         mean_age = 33.7
         std_dev_age = 5
         self.age = max(0, int(np.random.normal(mean_age, std_dev_age)))
-        self.social_preference = random.uniform(0,1) # introvert -1 and extrovert is 1
-        self.education_level = random.randint(1, 4) # 1 low-level -  4 high level education
+        self.social_preference = random.uniform(0,1)  # introvert -1 and extrovert is 1
+        self.education_level = random.randint(1, 4)  # 1 low-level -  4 high level education
 
         # getting flood map values
         # Get a random location on the map
@@ -62,7 +63,7 @@ class Households(Agent):
         if self.flood_depth_estimated < 0:
             self.flood_depth_estimated = 0
         
-        # calculate the estimated flood damage given the estimated flood depth. Flood damage is a factor between 0 and 1
+        # Calculate the estimated flood damage given the estimated flood depth. Flood damage is a factor between 0 and 1
         self.flood_damage_estimated = calculate_basic_flood_damage(flood_depth=self.flood_depth_estimated)
 
         # Add an attribute for the actual flood depth. This is set to zero at the beginning of the simulation since
@@ -70,7 +71,7 @@ class Households(Agent):
         # at some point during the simulation
         self.flood_depth_actual = 0
         
-        #calculate the actual flood damage given the actual flood depth. Flood damage is a factor between 0 and 1
+        # Calculate the actual flood damage given the actual flood depth. Flood damage is a factor between 0 and 1
         self.flood_damage_actual = calculate_basic_flood_damage(flood_depth=self.flood_depth_actual)
 
         # This function creates the initial conviction value based on a households attribute
@@ -97,47 +98,38 @@ class Households(Agent):
 
 
     def bias_change(self):
-        """"Makes the bounds of which the agent will tolerate influence from agents different them itself."""
+        """Makes the bounds of which the agent will tolerate influence from agents different them itself.
+        For each agent it will determine the dominant opinion within their network and return this. A positive
+        number is pro adaption, negative is against."""
         lower_conviction = self.conviction - self.tolerance if self.conviction - self.tolerance > 0 else 0
         higher_conviction = self.conviction + self.tolerance if self.conviction + self.tolerance < 1 else 1
 
-        """For each agent it will determine the dominant opinion within their network and return this. A positive 
-        number is pro adaption, negative is against."""
         for agent in self.social_network:
-            # check for each social connection whether there is enough similarity
+            # check for each social connection whether there is enough similarity between the agents to warrant a
+            # change in opinion
             if lower_conviction < self.model.schedule.agents[agent].conviction < higher_conviction and random.random() < 0.5:
                 if self.model.schedule.agents[agent].is_adapted:
-                    self.bias_network_adaption += self.amount_of_change_in_bias
+                    self.general_bias_in_network += self.bias_change_per_tick
                 if not self.model.schedule.agents[agent].is_adapted and random.random() < 0.25:
-                    self.bias_network_adaption -= self.amount_of_change_in_bias
+                    self.general_bias_in_network -= self.bias_change_per_tick
 
     def step(self):
         """Logic for adaptation based on estimated flood damage and a random chance.
         These conditions are examples and should be refined for real-world applications."""
         self.bias_change()
 
-        # Checking for adaption using an auxiliary adaption factor
-        adaption_factor = self.flood_damage_estimated + self.bias_network_adaption
+        # Checking for potential flood adaption using an auxiliary adaption factor, made of the bias in an agent's
+        # network, the estimated flood damage and the difference in this estimation compared to an actual flooding
+        adaption_factor = self.flood_damage_estimated + self.general_bias_in_network
+        # The adaption factor gets capped between 0 and 2
         if adaption_factor < 0:
             adaption_factor = 0
         if adaption_factor > 2:
             adaption_factor = 2
         if adaption_factor > 0.7 and not self.is_adapted:
             self.is_adapted = True
-            print(f'step: {self.model.schedule.steps} : {self.unique_id} adapted with a bias of {self.bias_network_adaption}'
+            print(f'step: {self.model.schedule.steps} : {self.unique_id} adapted with a bias of {self.general_bias_in_network}'
                   f' and a estimated damage of {self.flood_damage_estimated}!')
-        self.age += 0.25
-        
-# Define the Government agent class
-class Government(Agent):
-    """
-    A government agent that currently doesn't perform any actions.
-    """
-    def __init__(self, unique_id, model):
-        super().__init__(unique_id, model)
+        self.age += 0.25  # ageing every tick
 
-    def step(self):
-        # The government agent doesn't perform any actions.
-        pass
 
-# More agent classes can be added here, e.g. for insurance agents.
