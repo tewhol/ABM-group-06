@@ -24,7 +24,7 @@ class AdaptationModel(Model):
     simulates their behavior, and collects data. The network type can be adjusted based on study requirements.
     """
 
-    def __init__(self, 
+    def __init__(self,
                  seed = None,
                  number_of_households = 25, # number of household agents
                  # Simplified argument for choosing flood map. Can currently be "harvey", "100yr", or "500yr".
@@ -40,7 +40,7 @@ class AdaptationModel(Model):
                  # number of nearest neighbours for WS social network
                  number_of_nearest_neighbours = 5,
                  # number of households with children
-                 number_of_children = 20,
+                 factor_with_children = 0.2,
                  # the tolerance level for each agent,
                  household_tolerance = 0.05,
                  # time of flood
@@ -79,7 +79,8 @@ class AdaptationModel(Model):
         #now that the network is established, let's give each agent their connections in the social network
         for agent in self.schedule.agents:
             agent.find_social_network()
-        self.set_children(number_of_children)
+            if random.random() < factor_with_children:
+                agent.has_child = True
 
         # Data collection setup to collect data
         model_metrics = {
@@ -101,13 +102,6 @@ class AdaptationModel(Model):
                         }
         #set up the data collector 
         self.datacollector = DataCollector(model_reporters=model_metrics, agent_reporters=agent_metrics)
-            
-    def set_children(self, number_with_children):
-        households_with_children = random.sample(self.schedule.agents, number_with_children)
-
-        # Stel het attribuut 'heeft_kinderen' in op True voor de geselecteerde huishoudens
-        for Households in households_with_children:
-            Households.has_child = True
 
     def initialize_network(self):
         """

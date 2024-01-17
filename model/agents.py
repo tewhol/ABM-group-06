@@ -18,7 +18,7 @@ class Households(Agent):
     In a real scenario, this would be based on actual geographical data or more complex logic.
     """
 
-    def __init__(self, unique_id, model, radius_network, tolerance, bias_change_per_tick, has_child=False):
+    def __init__(self, unique_id, model, radius_network, tolerance, bias_change_per_tick, has_child):
         super().__init__(unique_id, model)
         self.is_adapted = False  # Initial adaptation status set to False
         self.actual_flood_impact_on_bias = 0  # Initial variable about how a real flood would impact an agent's bias
@@ -89,7 +89,7 @@ class Households(Agent):
         return len(self.social_network)
 
     def calculate_initial_conviction(self):
-        child_factor = 0.2 if self.has_child else 0
+        child_factor = self.has_child if self.has_child is not None else 0
         scaled_house_size = (self.house_size - 1) * 0.05
         scaled_education_level = (self.education_level - 1) * 0.05
         scaled_social_preference = self.social_preference * 0.2
