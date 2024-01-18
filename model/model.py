@@ -24,35 +24,42 @@ class AdaptationModel(Model):
     simulates their behavior, and collects data. The network type can be adjusted based on study requirements.
     """
 
-    def __init__(self, 
-                 seed = None,
-                 number_of_households = 25, # number of household agents
+    def __init__(self,
+                 seed=None,
+                 number_of_households=25,  # number of household agents
                  # Simplified argument for choosing flood map. Can currently be "harvey", "100yr", or "500yr".
                  flood_map_choice='harvey',
                  # ### network related parameters ###
                  # The social network structure that is used.
                  # Can currently be "erdos_renyi", "barabasi_albert", "watts_strogatz", or "no_network"
-                 network = 'watts_strogatz',
+                 network='watts_strogatz',
                  # likeliness of edge being created between two nodes
-                 probability_of_network_connection = 0.4,
+                 probability_of_network_connection=0.4,
                  # number of edges for BA network
-                 number_of_edges = 3,
+                 number_of_edges=3,
                  # number of nearest neighbours for WS social network
-                 number_of_nearest_neighbours = 5,
+                 number_of_nearest_neighbours=5,
                  # number of households with children
-                 number_of_children = 20,
+                 factor_with_children=0.2,
                  # the tolerance level for each agent,
-                 household_tolerance = 0.05
+                 household_tolerance=0.05,
+                 # time of flood
+                 flood_time_tick=5,
+                 # The attribute impact factors that construct an agent's conviction
+                 attribute_impact_factors = [0.2, 0.2, 0.05, 0.05, 0.2, 0.2],
+                 # A tuple with the prevalence of each attribute in each agent
+                 attribute_prevalence = ()
                  ):
-        
-        super().__init__(seed = seed)
-        
+
+        super().__init__(seed=seed)
+
         # defining the variables and setting the values
+        self.flood_time_tick = flood_time_tick
         self.number_of_households = number_of_households  # Total number of household agents
         self.seed = seed
 
         # network
-        self.network = network # Type of network to be created
+        self.network = network  # Type of network to be created
         self.probability_of_network_connection = probability_of_network_connection
         self.number_of_edges = number_of_edges
         self.number_of_nearest_neighbours = number_of_nearest_neighbours
@@ -65,46 +72,49 @@ class AdaptationModel(Model):
         # Initialize maps
         self.initialize_maps(flood_map_choice)
 
-        # set schedule for agents
+        # set schedule for agents, and defining agent attributes
         self.schedule = RandomActivation(self)  # Schedule for activating agents
+        # Impacts factors for each agent attribute to construct each agent's conviction
+        self.agent_attribute_dictionary = dict(wealth_factor=attribute_impact_factors[0],
+                                               child_factor=attribute_impact_factors[1],
+                                               house_size_factor=attribute_impact_factors[2],
+                                               education_factor=attribute_impact_factors[3],
+                                               social_factor=attribute_impact_factors[4],
+                                               age_factor=attribute_impact_factors[5])
+
         # create households through initiating a household on each node of the network graph
         for i, node in enumerate(self.G.nodes()):
-            household = Households(unique_id=i, model=self, radius_network=1, amount_of_change_in_bias= 0.2 ,tolerance=household_tolerance)
+            household = Households(unique_id=i, model=self, radius_network=1, bias_change_per_tick=0.2,
+                                   tolerance=household_tolerance, attribute_dictionary=self.agent_attribute_dictionary)
             self.schedule.add(household)
             self.grid.place_agent(agent=household, node_id=node)
 
-        #now that the network is established, let's give each agent their connections in the social network
+        # now that the network is established, let's give each agent their connections in the social network
         for agent in self.schedule.agents:
             agent.find_social_network()
-        self.set_children(number_of_children)
+            if random.random() < factor_with_children:
+                agent.has_child = True
 
         # Data collection setup to collect data
         model_metrics = {
-                        "total_adapted_households": self.total_adapted_households,
-                        # ... other reporters ...
-                        }
-        
-        agent_metrics = {
-                        "FloodDepthEstimated": "flood_depth_estimated",
-                        "FloodDamageEstimated" : "flood_damage_estimated",
-                        "FloodDepthActual": "flood_depth_actual",
-                        "FloodDamageActual" : "flood_damage_actual",
-                        "IsAdapted": "is_adapted",
-                        "Conviction": "conviction",
-                        "FriendsCount": lambda a: a.count_friends(),
-                        "location":"location",
-                        "HasChild":"has_child"
-                        # ... other reporters ...
-                        }
-        #set up the data collector 
-        self.datacollector = DataCollector(model_reporters=model_metrics, agent_reporters=agent_metrics)
-            
-    def set_children(self, number_with_children):
-        households_with_children = random.sample(self.schedule.agents, number_with_children)
+            "total_adapted_households": self.total_adapted_households,
+            # ... other reporters ...
+        }
 
-        # Stel het attribuut 'heeft_kinderen' in op True voor de geselecteerde huishoudens
-        for Households in households_with_children:
-            Households.has_child = True
+        agent_metrics = {
+            "FloodDepthEstimated": "flood_depth_estimated",
+            "FloodDamageEstimated": "flood_damage_estimated",
+            "FloodDepthActual": "flood_depth_actual",
+            "FloodDamageActual": "flood_damage_actual",
+            "IsAdapted": "is_adapted",
+            "Conviction": "conviction",
+            "FriendsCount": lambda a: a.count_friends(),
+            "location": "location",
+            "HasChild": "has_child"
+            # ... other reporters ...
+        }
+        # set up the data collector
+        self.datacollector = DataCollector(model_reporters=model_metrics, agent_reporters=agent_metrics)
 
     def initialize_network(self):
         """
@@ -120,18 +130,17 @@ class AdaptationModel(Model):
                                             seed=self.seed)
         elif self.network == 'watts_strogatz':
             return nx.watts_strogatz_graph(n=self.number_of_households,
-                                        k=self.number_of_nearest_neighbours,
-                                        p=self.probability_of_network_connection,
-                                        seed=self.seed)
+                                           k=self.number_of_nearest_neighbours,
+                                           p=self.probability_of_network_connection,
+                                           seed=self.seed)
         elif self.network == 'no_network':
             G = nx.Graph()
             G.add_nodes_from(range(self.number_of_households))
             return G
         else:
             raise ValueError(f"Unknown network type: '{self.network}'. "
-                            f"Currently implemented network types are: "
-                            f"'erdos_renyi', 'barabasi_albert', 'watts_strogatz', and 'no_network'")
-
+                             f"Currently implemented network types are: "
+                             f"'erdos_renyi', 'barabasi_albert', 'watts_strogatz', and 'no_network'")
 
     def initialize_maps(self, flood_map_choice):
         """
@@ -159,10 +168,10 @@ class AdaptationModel(Model):
 
     def total_adapted_households(self):
         """Return the total number of households that have adapted."""
-        #BE CAREFUL THAT YOU MAY HAVE DIFFERENT AGENT TYPES SO YOU NEED TO FIRST CHECK IF THE AGENT IS ACTUALLY A HOUSEHOLD AGENT USING "ISINSTANCE"
+        # BE CAREFUL THAT YOU MAY HAVE DIFFERENT AGENT TYPES SO YOU NEED TO FIRST CHECK IF THE AGENT IS ACTUALLY A HOUSEHOLD AGENT USING "ISINSTANCE"
         adapted_count = sum([1 for agent in self.schedule.agents if isinstance(agent, Households) and agent.is_adapted])
         return adapted_count
-    
+
     def plot_model_domain_with_agents(self):
         fig, ax = plt.subplots()
         # Plot the model domain
@@ -173,8 +182,10 @@ class AdaptationModel(Model):
         # Collect agent locations and statuses
         for agent in self.schedule.agents:
             color = 'blue' if agent.is_adapted else 'red'
-            ax.scatter(agent.location.x, agent.location.y, color=color, s=10, label=color.capitalize() if not ax.collections else "")
-            ax.annotate(str(agent.unique_id), (agent.location.x, agent.location.y), textcoords="offset points", xytext=(0,1), ha='center', fontsize=9)
+            ax.scatter(agent.location.x, agent.location.y, color=color, s=10,
+                       label=color.capitalize() if not ax.collections else "")
+            ax.annotate(str(agent.unique_id), (agent.location.x, agent.location.y), textcoords="offset points",
+                        xytext=(0, 1), ha='center', fontsize=9)
         # Create legend with unique entries
         handles, labels = ax.get_legend_handles_labels()
         by_label = dict(zip(labels, handles))
@@ -198,13 +209,14 @@ class AdaptationModel(Model):
         assume local flooding instead of global flooding). The actual flood depth can be 
         estimated differently
         """
-        if self.schedule.steps == 5:
+        if self.schedule.steps == self.flood_time_tick:
             for agent in self.schedule.agents:
-                # Calculate the actual flood depth as a random number between 0.5 and 1.2 times the estimated flood depth
+                # Calculate actual flood depth as a random number between 0.5 and 1.2 times the estimated flood depth
                 agent.flood_depth_actual = random.uniform(0.5, 1.2) * agent.flood_depth_estimated
                 # calculate the actual flood damage given the actual flood depth
                 agent.flood_damage_actual = calculate_basic_flood_damage(agent.flood_depth_actual)
-        
+                agent.actual_flood_impact_on_bias = agent.flood_damage_actual - agent.flood_damage_estimated
+
         # Collect data and advance the model by one step
         self.datacollector.collect(self)
         self.schedule.step()
