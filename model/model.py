@@ -46,7 +46,7 @@ class AdaptationModel(Model):
                  # time of flood
                  flood_time_tick=5,
                  # The attribute impact factors that construct an agent's conviction
-                 attribute_impact_factors = (0.2, 0.2, 0.05, 0.05, 0.2, 0.2),
+                 attribute_impact_factors = [0.2, 0.2, 0.05, 0.05, 0.2, 0.2],
                  # A tuple with the prevalence of each attribute in each agent
                  attribute_prevalence = ()
                  ):

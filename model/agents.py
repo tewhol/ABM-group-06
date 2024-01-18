@@ -39,7 +39,7 @@ class Households(Agent):
         self.house_size = random.randint(1, 4)  # simulating different type of sizes each house has
         self.has_child = False  # True of false about having child
         self.age = max(0, int(np.random.normal(33.7, 5)))  # Where 33.4 is the mean_age and 5 the standard deviation
-        self.social_preference = random.uniform(0, 1)  # introvert -1 and extrovert is 1
+        self.social_preference = random.uniform(-1, 1)  # introvert -1 and extrovert is 1
         self.education_level = random.randint(1, 4)  # 1 low-level -  4 high level education
 
         # Calculate the conviction_based on a dictionary with impact factors for every agent, delivered by the model
