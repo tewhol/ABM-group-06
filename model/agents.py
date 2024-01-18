@@ -115,7 +115,7 @@ class Households(Agent):
                 self.social_preference = self.attribute_distribution(dist_type, dist_values)
                 scaled_social_preference = self.social_preference * impact_on_conviction
             elif attribute == 'age':
-                self.age = max(int(self.attribute_distribution(dist_type, dist_values), 18))  # The minimum age is 18
+                self.age = int(max(self.attribute_distribution(dist_type, dist_values), 18))  # The minimum age is 18
                 scaled_age = (self.age / 100) * impact_on_conviction
             else:
                 print(f'{attribute} does not exist in model!')

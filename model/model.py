@@ -82,17 +82,17 @@ class AdaptationModel(Model):
         # set schedule for agents, and defining agent attributes
         self.schedule = RandomActivation(self)  # Schedule for activating agents
 
-        # create households through initiating a household on each node of the network graph
+        # create households through initiating a household on each node of the network graph and create this
+        # household's attribute values using the provided attribute dictionary.
         for i, node in enumerate(self.G.nodes()):
             household = Households(unique_id=i, model=self, radius_network=1, bias_change_per_tick=0.2,
                                    tolerance=household_tolerance)
             self.schedule.add(household)
             self.grid.place_agent(agent=household, node_id=node)
+            household.generate_attribute_values(attribute_dictionary)
 
-        # now that the network is established, let's give each agent their connections in the social network and
-        # their attribute values, based on the attribute dictionary.
+        # now that the network is established, let's give each agent their connections in the social network
         for agent in self.schedule.agents:
-            agent.generate_attribute_values(attribute_dictionary)
             agent.find_social_network()
 
         # Data collection setup to collect data
