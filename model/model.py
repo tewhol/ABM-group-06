@@ -45,10 +45,17 @@ class AdaptationModel(Model):
                  household_tolerance=0.05,
                  # time of flood
                  flood_time_tick=5,
-                 # The attribute impact factors that construct an agent's conviction
-                 attribute_impact_factors = [0.2, 0.2, 0.05, 0.05, 0.2, 0.2],
-                 # A tuple with the prevalence of each attribute in each agent
-                 attribute_prevalence = ()
+                 # A dictionary with entries that respectively defines the impact factor and the general distribution
+                 # for agent attributes. The latter is in a tuple with the letter marking the type and the numbers
+                 # the parameters for the distribution.
+                 attribute_dictionary = {
+                                         "wealth" : [0.2, 'UI', (1, 4)],
+                                         "child" : [0.2,  'B', (0.2)],
+                                         "house_size": [0.05, 'UI', (1, 4)],
+                                         "education": [0.05, 'UI', (1, 4)],
+                                         "social": [0.2, 'U', (-1, 1)],
+                                         "age": [0.2, 'N', (33.4, 5)]
+                                         }
                  ):
 
         super().__init__(seed=seed)
@@ -74,26 +81,19 @@ class AdaptationModel(Model):
 
         # set schedule for agents, and defining agent attributes
         self.schedule = RandomActivation(self)  # Schedule for activating agents
-        # Impacts factors for each agent attribute to construct each agent's conviction
-        self.agent_attribute_dictionary = dict(wealth_factor=attribute_impact_factors[0],
-                                               child_factor=attribute_impact_factors[1],
-                                               house_size_factor=attribute_impact_factors[2],
-                                               education_factor=attribute_impact_factors[3],
-                                               social_factor=attribute_impact_factors[4],
-                                               age_factor=attribute_impact_factors[5])
 
         # create households through initiating a household on each node of the network graph
         for i, node in enumerate(self.G.nodes()):
             household = Households(unique_id=i, model=self, radius_network=1, bias_change_per_tick=0.2,
-                                   tolerance=household_tolerance, attribute_dictionary=self.agent_attribute_dictionary)
+                                   tolerance=household_tolerance)
             self.schedule.add(household)
             self.grid.place_agent(agent=household, node_id=node)
 
-        # now that the network is established, let's give each agent their connections in the social network
+        # now that the network is established, let's give each agent their connections in the social network and
+        # their attribute values, based on the attribute dictionary.
         for agent in self.schedule.agents:
+            agent.generate_attribute_values(attribute_dictionary)
             agent.find_social_network()
-            if random.random() < factor_with_children:
-                agent.has_child = True
 
         # Data collection setup to collect data
         model_metrics = {
