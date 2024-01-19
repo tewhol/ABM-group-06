@@ -34,13 +34,13 @@ class Households(Agent):
         self.social_network = []
 
         # Attributes directly related to the households identity
-        self.wealth = 0  # Potential values, integer: 1 is low-income, 2 below average, 3 above average, 4 rich
-        self.house_type = 0  # Potential values: 1 is apartment in a block, and 2 is freestanding house
+        self.wealth = 0  # Potential values, integer: 0 is low-income, 1 below average, 2 above average, 3 rich
+        self.house_type = 0  # Potential values: 0 is apartment in a block, and 1 is freestanding house
         self.house_size = 0  # Potential values: simulating different type of sizes each house has
         self.has_child = False  # Potential values, boolean: True of false about having child
         self.age = 0  # Potential values: at least 18
         self.social_preference = 0  # Potential values: between introvert -1 and extrovert is 1
-        self.education_level = 0  # Potential values, integer: 1 low-level -  4 high level education
+        self.education_level = 0  # Potential values, integer: 0 low-level - 3 high level education
         self.conviction = 0  # Potential values: between 0 and 1
 
         # getting flood map values
@@ -85,41 +85,33 @@ class Households(Agent):
         not spatial"""
         return len(self.social_network)
 
-    # This function calculates each household's attributes using the auxiliary distribution function and the
-    # attribute dictionary, provided by the model. This dictionary dictates how agent attributes should be
-    # constructed across the entire model population. Based on all generated attribute values calculates the agent's
-    # conviction.
     def generate_attribute_values(self, attribute_dictionary):
-        """It takes each element from the model's attribute dictionary, checks the corresponding agent attribute and
-        then uses the auxiliary distribution function to assign a value to the attribute value of this particular
-        agent. Furthermore, it calculates the attribute's share in determining the agent's conviction. This
-        share/partial impact factor is also pre-defined in the attribute dictionary"""
-        wealth_factor = child_factor = scaled_house_size = scaled_education_level = scaled_social_preference = scaled_age = 0
-        for attribute in attribute_dictionary:
-            impact_on_conviction = attribute_dictionary[attribute][0]
-            dist_type = attribute_dictionary[attribute][1]
-            dist_values = attribute_dictionary[attribute][2]
-            if attribute == 'wealth':
-                self.wealth = self.attribute_distribution(dist_type, dist_values)
-                wealth_factor = (self.wealth - 1) * impact_on_conviction
-            elif attribute == 'child':
-                self.has_child = self.attribute_distribution(dist_type, dist_values)
-                child_factor = impact_on_conviction if self.has_child else 0
-            elif attribute == 'house_size':
-                self.house_size = self.attribute_distribution(dist_type, dist_values)
-                scaled_house_size = (self.house_size - 1) * impact_on_conviction
-            elif attribute == 'education':
-                self.education_level = self.attribute_distribution(dist_type, dist_values)
-                scaled_education_level = (self.education_level - 1) * impact_on_conviction
-            elif attribute == 'social':
-                self.social_preference = self.attribute_distribution(dist_type, dist_values)
-                scaled_social_preference = self.social_preference * impact_on_conviction
-            elif attribute == 'age':
-                self.age = int(max(self.attribute_distribution(dist_type, dist_values), 18))  # The minimum age is 18
-                scaled_age = (self.age / 100) * impact_on_conviction
+        """Generate attribute values for the household based on the provided attribute dictionary."""
+        for attribute, values in attribute_dictionary.items():
+            # Ensure age is at least 18 and is an integer
+            if attribute == 'age':
+                age_value = max(int(self.attribute_distribution(values[1], values[2])), 18)
+                setattr(self, attribute, age_value)
             else:
-                print(f'{attribute} does not exist in model!')
-        self.conviction = wealth_factor + child_factor + scaled_house_size + scaled_education_level + scaled_social_preference + scaled_age
+                setattr(self, attribute, self.attribute_distribution(values[1], values[2]))
+
+        self.calculate_conviction(attribute_dictionary)
+
+    def calculate_conviction(self, attribute_dictionary):
+        """Calculate the household's conviction by determining each attribute's share."""
+        # By creating an auxiliary dictionary that defines how each partial share of the agent's attribute
+        # contributes to the agent's conviction.
+        factors = {
+            'wealth': lambda x: x * attribute_dictionary['wealth'][0],
+            'has_child': lambda x: attribute_dictionary['has_child'][0] if x else 0,  # No child means this partial is 0
+            'house_size': lambda x: x * attribute_dictionary['house_size'][0],
+            'house_type': lambda x: x * attribute_dictionary['house_type'][0],
+            'education_level': lambda x: x * attribute_dictionary['education_level'][0],
+            'social_preference': lambda x: x * attribute_dictionary['social_preference'][0],
+            'age': lambda x: (x / 100) * attribute_dictionary['age'][0]
+        }
+
+        self.conviction = sum(factors[attribute](getattr(self, attribute)) for attribute in factors)
 
     # Ensuring that different types of distributions can be selected for agent attributes as the model input.
     def attribute_distribution(self, dist_type, dist_values):

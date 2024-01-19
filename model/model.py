@@ -40,11 +40,12 @@ class AdaptationModel(Model):
         # Defining the standard agent attributes variables and their distributions in case none are provided.
         if attribute_dictionary is None:
             attribute_dictionary = {
-                "wealth": [0.2, 'UI', (1, 4)],
-                "child": [0.2, 'B', (0.2)],
-                "house_size": [0.05, 'UI', (1, 4)],
-                "education": [0.05, 'UI', (1, 4)],
-                "social": [0.2, 'U', (-1, 1)],
+                "wealth": [0.2, 'UI', (0, 3)],
+                "has_child": [0.2, 'B', (0.2)],
+                "house_size": [0.05, 'UI', (0, 2)],
+                "house_type": [0.05, 'UI', (0, 1)],
+                "education_level": [0.05, 'UI', (0, 3)],
+                "social_preference": [0.2, 'U', (-1, 1)],
                 "age": [0.2, 'N', (33.4, 5)]
             }
 
