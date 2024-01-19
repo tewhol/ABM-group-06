@@ -25,51 +25,57 @@ class AdaptationModel(Model):
     """
 
     def __init__(self,
-                 seed=None,
-                 number_of_households=25,  # number of household agents
                  # Simplified argument for choosing flood map. Can currently be "harvey", "100yr", or "500yr".
                  flood_map_choice='harvey',
-                 # ### network related parameters ###
-                 # The social network structure that is used.
-                 # Can currently be "erdos_renyi", "barabasi_albert", "watts_strogatz", or "no_network"
-                 network='watts_strogatz',
-                 # likeliness of edge being created between two nodes
-                 probability_of_network_connection=0.4,
-                 # number of edges for BA network
-                 number_of_edges=3,
-                 # number of nearest neighbours for WS social network
-                 number_of_nearest_neighbours=5,
-                 # number of households with children
-                 factor_with_children=0.2,
-                 # the tolerance level for each agent,
-                 household_tolerance=0.05,
-                 # time of flood
-                 flood_time_tick=5,
+                 # A dictionary that provides all the necessary parameters to define the network of agents that is
+                 # going to be created and some of the dynamic variables that the model needs (like the tolerance and
+                 # the flood time)
+                 network_dynamics_dictionary=None,
                  # A dictionary with entries that respectively defines the impact factor and the general distribution
                  # for agent attributes. The latter is in a tuple with the letter marking the type and the numbers
                  # the parameters for the distribution.
-                 attribute_dictionary = {
-                                         "wealth" : [0.2, 'UI', (1, 4)],
-                                         "child" : [0.2,  'B', (0.2)],
-                                         "house_size": [0.05, 'UI', (1, 4)],
-                                         "education": [0.05, 'UI', (1, 4)],
-                                         "social": [0.2, 'U', (-1, 1)],
-                                         "age": [0.2, 'N', (33.4, 5)]
-                                         }
+                 attribute_dictionary=None
                  ):
 
-        super().__init__(seed=seed)
+        # Defining the standard agent attributes variables and their distributions in case none are provided.
+        if attribute_dictionary is None:
+            attribute_dictionary = {
+                "wealth": [0.2, 'UI', (1, 4)],
+                "child": [0.2, 'B', (0.2)],
+                "house_size": [0.05, 'UI', (1, 4)],
+                "education": [0.05, 'UI', (1, 4)],
+                "social": [0.2, 'U', (-1, 1)],
+                "age": [0.2, 'N', (33.4, 5)]
+            }
 
-        # defining the variables and setting the values
-        self.flood_time_tick = flood_time_tick
-        self.number_of_households = number_of_households  # Total number of household agents
-        self.seed = seed
+        # Defining the standard model network and network interaction/social dynamics in case none are provided.
+        if network_dynamics_dictionary is None:
+            network_dynamics_dictionary = {
+                # The social network structure that is used. Can currently be
+                # "erdos_renyi", "barabasi_albert", "watts_strogatz", or "no_network"
+                "network": 'watts_strogatz',
+                "number_of_households": 25,  # number of household agents
+                "probability_of_network_connection": 0.4,  # likeliness of edge being created between two nodes
+                "number_of_edges": 3,  # number of edges for BA network
+                "number_of_nearest_neighbours": 5,  # number of nearest neighbours for WS social network
+                "household_tolerance": 0.1,  # the tolerance level for each agent,
+                "flood_time_tick": 5,  # time of flood
+                "seed": 1  # The seed used to generate pseudo random numbers
+            }
+
+        self.flood_time_tick = network_dynamics_dictionary['flood_time_tick']  # The exact tick on which a flood occurs
+        self.number_of_households = network_dynamics_dictionary['number_of_households']  # Total number of household agents
+        self.seed = network_dynamics_dictionary['seed'] # The model seed
+
+        super().__init__(seed=self.seed)
 
         # network
-        self.network = network  # Type of network to be created
-        self.probability_of_network_connection = probability_of_network_connection
-        self.number_of_edges = number_of_edges
-        self.number_of_nearest_neighbours = number_of_nearest_neighbours
+        self.network = network_dynamics_dictionary['network']  # Type of network to be created
+        self.probability_of_network_connection = network_dynamics_dictionary['probability_of_network_connection']
+        self.number_of_edges = network_dynamics_dictionary['number_of_edges']
+        self.number_of_nearest_neighbours = network_dynamics_dictionary['number_of_nearest_neighbours']
+        # Determines the manner of similarity needed for households to influence each other
+        self.household_tolerance = network_dynamics_dictionary['household_tolerance']
 
         # generating the graph according to the network used and the network parameters specified
         self.G = self.initialize_network()
@@ -86,7 +92,7 @@ class AdaptationModel(Model):
         # household's attribute values using the provided attribute dictionary.
         for i, node in enumerate(self.G.nodes()):
             household = Households(unique_id=i, model=self, radius_network=1, bias_change_per_tick=0.2,
-                                   tolerance=household_tolerance)
+                                   tolerance=self.household_tolerance)
             self.schedule.add(household)
             self.grid.place_agent(agent=household, node_id=node)
             household.generate_attribute_values(attribute_dictionary)

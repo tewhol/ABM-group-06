@@ -43,7 +43,6 @@ class Households(Agent):
         self.education_level = 0  # Potential values, integer: 1 low-level -  4 high level education
         self.conviction = 0  # Potential values: between 0 and 1
 
-
         # getting flood map values
         # Get a random location on the map
         loc_x, loc_y = generate_random_location_within_map_domain()
@@ -93,8 +92,9 @@ class Households(Agent):
     def generate_attribute_values(self, attribute_dictionary):
         """It takes each element from the model's attribute dictionary, checks the corresponding agent attribute and
         then uses the auxiliary distribution function to assign a value to the attribute value of this particular
-        agent. Furhtermore, it calculates the attribute's share in determining the agent's conviction. This
+        agent. Furthermore, it calculates the attribute's share in determining the agent's conviction. This
         share/partial impact factor is also pre-defined in the attribute dictionary"""
+        wealth_factor = child_factor = scaled_house_size = scaled_education_level = scaled_social_preference = scaled_age = 0
         for attribute in attribute_dictionary:
             impact_on_conviction = attribute_dictionary[attribute][0]
             dist_type = attribute_dictionary[attribute][1]
@@ -125,12 +125,13 @@ class Households(Agent):
     def attribute_distribution(self, dist_type, dist_values):
         """The function takes the attribute dictionary as input. This dictionary is created on the model level and
         defines the agent attributes and their impacts on the model level. In this function the actual result value
-        of these predefined distribution can be calculated"""
+        of these predefined distribution can be calculated. The function requires chosen distribution values to
+        correspond to the distribution type: e.g. an exponential distribution only needs one (lambda) value"""
         if dist_type == 'UI':
             return random.randint(dist_values[0],
                                   dist_values[1])  # the lower and upper bound, returns integer
         elif dist_type == 'B':
-            return random.random() < dist_values
+            return random.random() < dist_values  # The chosen probability for a boolean value
         elif dist_type == 'U':
             return random.uniform(dist_values[0],
                                   dist_values[1])  # The lower and upper bound
@@ -156,7 +157,7 @@ class Households(Agent):
         for agent in self.social_network:
             # check for each social connection whether there is enough similarity between the agents to warrant a
             # change in opinion
-            if lower_conviction < self.model.schedule.agents[
+            if lower_conviction <= self.model.schedule.agents[
                 agent].conviction < higher_conviction and random.random() < 0.5:
                 if self.model.schedule.agents[agent].is_adapted:
                     self.general_bias_in_network += self.bias_change_per_tick
@@ -170,7 +171,7 @@ class Households(Agent):
 
         # Checking for potential flood adaption using an auxiliary adaption factor, made of the bias in an agent's
         # network, the estimated flood damage and the difference in this estimation compared to an actual flooding
-        adaption_factor = self.flood_damage_estimated + self.general_bias_in_network
+        adaption_factor = self.flood_damage_estimated + self.general_bias_in_network + self.actual_flood_impact_on_bias
         # The adaption factor gets capped between 0 and 2
         if adaption_factor < 0:
             adaption_factor = 0
