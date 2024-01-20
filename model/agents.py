@@ -19,18 +19,18 @@ class Households(Agent):
     In a real scenario, this would be based on actual geographical data or more complex logic.
     """
 
-    def __init__(self, unique_id, model, radius_network, agent_interaction_dynamics):
+    def __init__(self, unique_id, model, radius_network, agent_interaction_dictionary):
         super().__init__(unique_id, model)
         self.is_adapted = False  # Initial adaptation status set to False
         self.actual_flood_impact_on_bias = 0  # Initial variable about how a real flood would impact an agent's bias
 
         # An attribute representing the built-up bias in an agents network
         self.general_bias_in_network = 0
-        self.household_tolerance = agent_interaction_dynamics['household_tolerance']
-        self.bias_change_per_tick = agent_interaction_dynamics['bias_change_per_tick']
-        self.adaption_threshold = agent_interaction_dynamics['adaption_threshold']
-        self.probability_positive_bias_change = agent_interaction_dynamics['probability_positive_bias_change']
-        self.probability_negative_bias_change = agent_interaction_dynamics['probability_negative_bias_change']
+        self.tolerance = agent_interaction_dictionary['household_tolerance']
+        self.bias_change_per_tick = agent_interaction_dictionary['bias_change_per_tick']
+        self.adaption_threshold = agent_interaction_dictionary['adaption_threshold']
+        self.probability_positive_bias_change = agent_interaction_dictionary['probability_positive_bias_change']
+        self.probability_negative_bias_change = agent_interaction_dictionary['probability_negative_bias_change']
 
         # Attributes related to the size of one's social network, the radius and list of (friends/ friends of friends)
         self.radius_network = radius_network if radius_network is not None else 1
@@ -144,10 +144,9 @@ class Households(Agent):
         for agent in self.social_network:
             # check for each social connection whether there is enough similarity between the agents to warrant a
             # change in opinion
-            if lower_conviction <= self.model.schedule.agents[
-                agent].conviction < higher_conviction and random.random() < self.probability_positive_bias_change:
-                if self.model.schedule.agents[agent].is_adapted:
-                    self.general_bias_in_network += self.bias_change_per_tick
+            if lower_conviction <= self.model.schedule.agents[agent].conviction <= higher_conviction:
+                if self.model.schedule.agents[agent].is_adapted and random.random() < self.probability_positive_bias_change:
+                        self.general_bias_in_network += self.bias_change_per_tick
                 if not self.model.schedule.agents[agent].is_adapted and random.random() < self.probability_negative_bias_change:
                     self.general_bias_in_network -= self.bias_change_per_tick
 
