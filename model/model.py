@@ -71,10 +71,12 @@ class AdaptationModel(Model):
                 "number_of_edges": 3,  # number of edges for BA network
                 "number_of_nearest_neighbours": 5,  # number of nearest neighbours for WS social network
                 "flood_time_tick": 5,  # time of flood
+                "flood_severity_probability": (0.5, 1.2),  # Bounds between a Uniform distribution of the flood severity
                 "seed": 1  # The seed used to generate pseudo random numbers
             }
 
         self.flood_time_tick = network_dynamics_dictionary['flood_time_tick']  # The exact tick on which a flood occurs
+        self.flood_severity_probability = network_dynamics_dictionary['flood_severity_probability']  # flood bounds
         self.number_of_households = network_dynamics_dictionary['number_of_households']  # Total number of household agents
         self.seed = network_dynamics_dictionary['seed'] # The model seed
         self.agent_interaction_dictionary = agent_interaction_dictionary  # The dictionary of the agent's interaction variables
@@ -227,8 +229,10 @@ class AdaptationModel(Model):
         """
         if self.schedule.steps == self.flood_time_tick:
             for agent in self.schedule.agents:
-                # Calculate actual flood depth as a random number between 0.5 and 1.2 times the estimated flood depth
-                agent.flood_depth_actual = random.uniform(0.5, 1.2) * agent.flood_depth_estimated
+                # Calculate actual flood depth as a random number between the defined severity times the estimated
+                # flood depth
+                a, b = self.flood_severity_probability  # splitting tuple in two bounds
+                agent.flood_depth_actual = random.uniform(a, b) * agent.flood_depth_estimated
                 # calculate the actual flood damage given the actual flood depth
                 agent.flood_damage_actual = calculate_basic_flood_damage(agent.flood_depth_actual)
                 agent.actual_flood_impact_on_bias = agent.flood_damage_actual - agent.flood_damage_estimated
