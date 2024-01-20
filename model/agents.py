@@ -19,31 +19,32 @@ class Households(Agent):
     In a real scenario, this would be based on actual geographical data or more complex logic.
     """
 
-    def __init__(self, unique_id, model, radius_network, tolerance, bias_change_per_tick, attribute_dictionary):
+    def __init__(self, unique_id, model, radius_network, agent_interaction_dictionary):
         super().__init__(unique_id, model)
         self.is_adapted = False  # Initial adaptation status set to False
         self.actual_flood_impact_on_bias = 0  # Initial variable about how a real flood would impact an agent's bias
 
         # An attribute representing the built-up bias in an agents network
         self.general_bias_in_network = 0
-        self.bias_change_per_tick = bias_change_per_tick
-        self.tolerance = tolerance
+        self.tolerance = agent_interaction_dictionary['household_tolerance']
+        self.bias_change_per_tick = agent_interaction_dictionary['bias_change_per_tick']
+        self.adaption_threshold = agent_interaction_dictionary['adaption_threshold']
+        self.probability_positive_bias_change = agent_interaction_dictionary['probability_positive_bias_change']
+        self.probability_negative_bias_change = agent_interaction_dictionary['probability_negative_bias_change']
 
         # Attributes related to the size of one's social network, the radius and list of (friends/ friends of friends)
         self.radius_network = radius_network if radius_network is not None else 1
         self.social_network = []
 
         # Attributes directly related to the households identity
-        self.wealth = random.randint(1, 4)  # 1 is low-income, 2 below average, 3 above average, 4 rich
-        self.house_type = random.randint(1, 2)  # 1 is apartment in a block, and 2 is freestanding house
-        self.house_size = random.randint(1, 4)  # simulating different type of sizes each house has
-        self.has_child = False  # True of false about having child
-        self.age = max(0, int(np.random.normal(33.7, 5)))  # Where 33.4 is the mean_age and 5 the standard deviation
-        self.social_preference = random.uniform(-1, 1)  # introvert -1 and extrovert is 1
-        self.education_level = random.randint(1, 4)  # 1 low-level -  4 high level education
-
-        # Calculate the conviction_based on a dictionary with impact factors for every agent, delivered by the model
-        self.conviction = self.calculate_initial_conviction(attribute_dictionary)
+        self.wealth = 0  # Potential values, integer: 0 is low-income, 1 below average, 2 above average, 3 rich
+        self.house_type = 0  # Potential values: 0 is apartment in a block, and 1 is freestanding house
+        self.house_size = 0  # Potential values: simulating different type of sizes each house has
+        self.has_child = False  # Potential values, boolean: True of false about having child
+        self.age = 0  # Potential values: at least 18
+        self.social_preference = 0  # Potential values: between introvert -1 and extrovert is 1
+        self.education_level = 0  # Potential values, integer: 0 low-level - 3 high level education
+        self.conviction = 0  # Potential values: between 0 and 1
 
         # getting flood map values
         # Get a random location on the map
@@ -87,14 +88,51 @@ class Households(Agent):
         not spatial"""
         return len(self.social_network)
 
-    def calculate_initial_conviction(self, conviction_dictionary):
-        wealth_factor = (self.house_size - 1) * conviction_dictionary["wealth_factor"]
-        child_factor = conviction_dictionary["child_factor"] if self.has_child is not None else 0
-        scaled_house_size = (self.house_size - 1) * conviction_dictionary["house_size_factor"]
-        scaled_education_level = (self.education_level - 1) * conviction_dictionary["education_factor"]
-        scaled_social_preference = self.social_preference * conviction_dictionary["social_factor"]
-        scaled_age = (self.age / 100) * conviction_dictionary["age_factor"]
-        return wealth_factor + child_factor + scaled_house_size + scaled_education_level + scaled_social_preference + scaled_age
+    def generate_attribute_values(self, attribute_dictionary):
+        """Generate attribute values for the household based on the provided attribute dictionary."""
+        for attribute, values in attribute_dictionary.items():
+            # Ensure age is at least 18 and an integer
+            if attribute == 'age':
+                age_value = max(int(self.attribute_distribution(values[1], values[2])), 18)
+                setattr(self, attribute, age_value)
+            else:
+                setattr(self, attribute, self.attribute_distribution(values[1], values[2]))
+
+        self.calculate_conviction(attribute_dictionary)
+
+    def calculate_conviction(self, attribute_dictionary):
+        """Calculate the household's conviction by determining each attribute's share."""
+        # By creating an auxiliary dictionary that defines how each partial share of the agent's attribute
+        # contributes to the agent's conviction.
+        factors = {
+            'wealth': lambda x: x * attribute_dictionary['wealth'][0],
+            'has_child': lambda x: attribute_dictionary['has_child'][0] if x else 0,  # No child means this partial is 0
+            'house_size': lambda x: x * attribute_dictionary['house_size'][0],
+            'house_type': lambda x: x * attribute_dictionary['house_type'][0],
+            'education_level': lambda x: x * attribute_dictionary['education_level'][0],
+            'social_preference': lambda x: x * attribute_dictionary['social_preference'][0],
+            'age': lambda x: (x / 100) * attribute_dictionary['age'][0]
+        }
+
+        self.conviction = sum(factors[attribute](getattr(self, attribute)) for attribute in factors)
+
+    # Ensuring that different types of distributions can be selected for agent attributes as the model input.
+    def attribute_distribution(self, dist_type, dist_values):
+        """Calculate attribute values based on the specified distribution type and values."""
+        if dist_type == 'UI':
+            return random.randint(dist_values[0], dist_values[1])
+        elif dist_type == 'B':
+            return random.random() < dist_values
+        elif dist_type == 'U':
+            return random.uniform(dist_values[0], dist_values[1])
+        elif dist_type == 'N':
+            return np.random.normal(dist_values[0], dist_values[1])
+        elif dist_type == 'T':
+            return random.triangular(dist_values[0], dist_values[1], dist_values[2])
+        elif dist_type == 'E':
+            return random.expovariate(dist_values)
+        else:
+            print(f'Improper distribution type {dist_type} for household {self}')
 
     def bias_change(self):
         """Makes the bounds of which the agent will tolerate influence from agents different them itself.
@@ -106,11 +144,10 @@ class Households(Agent):
         for agent in self.social_network:
             # check for each social connection whether there is enough similarity between the agents to warrant a
             # change in opinion
-            if lower_conviction < self.model.schedule.agents[
-                agent].conviction < higher_conviction and random.random() < 0.5:
-                if self.model.schedule.agents[agent].is_adapted:
-                    self.general_bias_in_network += self.bias_change_per_tick
-                if not self.model.schedule.agents[agent].is_adapted and random.random() < 0.25:
+            if lower_conviction <= self.model.schedule.agents[agent].conviction <= higher_conviction:
+                if self.model.schedule.agents[agent].is_adapted and random.random() < self.probability_positive_bias_change:
+                        self.general_bias_in_network += self.bias_change_per_tick
+                if not self.model.schedule.agents[agent].is_adapted and random.random() < self.probability_negative_bias_change:
                     self.general_bias_in_network -= self.bias_change_per_tick
 
     def step(self):
@@ -120,13 +157,8 @@ class Households(Agent):
 
         # Checking for potential flood adaption using an auxiliary adaption factor, made of the bias in an agent's
         # network, the estimated flood damage and the difference in this estimation compared to an actual flooding
-        adaption_factor = self.flood_damage_estimated + self.general_bias_in_network
-        # The adaption factor gets capped between 0 and 2
-        if adaption_factor < 0:
-            adaption_factor = 0
-        if adaption_factor > 2:
-            adaption_factor = 2
-        if adaption_factor > 0.7 and not self.is_adapted:
+        adaption_factor = self.flood_damage_estimated + self.general_bias_in_network + self.actual_flood_impact_on_bias
+        if adaption_factor > self.adaption_threshold and not self.is_adapted:
             self.is_adapted = True
             print(
                 f'step: {self.model.schedule.steps} : {self.unique_id} adapted with a bias of {self.general_bias_in_network}'

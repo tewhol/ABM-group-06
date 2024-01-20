@@ -25,44 +25,69 @@ class AdaptationModel(Model):
     """
 
     def __init__(self,
-                 seed=None,
-                 number_of_households=25,  # number of household agents
                  # Simplified argument for choosing flood map. Can currently be "harvey", "100yr", or "500yr".
                  flood_map_choice='harvey',
-                 # ### network related parameters ###
-                 # The social network structure that is used.
-                 # Can currently be "erdos_renyi", "barabasi_albert", "watts_strogatz", or "no_network"
-                 network='watts_strogatz',
-                 # likeliness of edge being created between two nodes
-                 probability_of_network_connection=0.4,
-                 # number of edges for BA network
-                 number_of_edges=3,
-                 # number of nearest neighbours for WS social network
-                 number_of_nearest_neighbours=5,
-                 # number of households with children
-                 factor_with_children=0.2,
-                 # the tolerance level for each agent,
-                 household_tolerance=0.05,
-                 # time of flood
-                 flood_time_tick=5,
-                 # The attribute impact factors that construct an agent's conviction
-                 attribute_impact_factors = [0.2, 0.2, 0.05, 0.05, 0.2, 0.2],
-                 # A tuple with the prevalence of each attribute in each agent
-                 attribute_prevalence = ()
+                 # A dictionary that provides all the necessary parameters to define the network of agents that is
+                 # going to be created and some of the dynamic variables that the model needs (like the flood time)
+                 network_dynamics_dictionary=None,
+                 # A dictionary with entries that respectively defines the impact factor and the general distribution
+                 # for agent attributes. The latter is in a tuple with the letter marking the type and the numbers
+                 # the parameters for the distribution.
+                 attribute_dictionary=None,
+                 # A dictionary that provides the values regarding the influence that agents can have on each other.
+                 agent_interaction_dictionary=None
                  ):
 
-        super().__init__(seed=seed)
+        # Defining the standard agent attributes variables and their distributions in case none are provided.
+        if attribute_dictionary is None:
+            attribute_dictionary = {
+                "wealth": [0.2, 'UI', (0, 3)],
+                "has_child": [0.2, 'B', (0.2)],
+                "house_size": [0.05, 'UI', (0, 2)],
+                "house_type": [0.05, 'UI', (0, 1)],
+                "education_level": [0.05, 'UI', (0, 3)],
+                "social_preference": [0.2, 'U', (-1, 1)],
+                "age": [0.2, 'N', (33.4, 5)]
+            }
 
-        # defining the variables and setting the values
-        self.flood_time_tick = flood_time_tick
-        self.number_of_households = number_of_households  # Total number of household agents
-        self.seed = seed
+        # Defining the standard values for agent interaction dynamics in case none are provided.
+        if agent_interaction_dictionary is None:
+            agent_interaction_dictionary = {
+                "household_tolerance": 0.1,  # the tolerance level for each agent
+                "bias_change_per_tick": 0.2,  # Bias change per tick when an agent when it's influenced by its network
+                "probability_positive_bias_change": 1,  # Probability that agent changes it's bias positively
+                "probability_negative_bias_change": 1,  # Probability that agent changes it's bias negatively
+                "adaption_threshold": 0.7  # Threshold of bias an agent needs to adapt
+            }
+
+        # Defining the standard model network and network interaction/social dynamics in case none are provided.
+        if network_dynamics_dictionary is None:
+            network_dynamics_dictionary = {
+                # The social network structure that is used. Can currently be
+                # "erdos_renyi", "barabasi_albert", "watts_strogatz", or "no_network"
+                "network": 'watts_strogatz',
+                "number_of_households": 25,  # number of household agents
+                "probability_of_network_connection": 0.4,  # likeliness of edge being created between two nodes
+                "number_of_edges": 3,  # number of edges for BA network
+                "number_of_nearest_neighbours": 5,  # number of nearest neighbours for WS social network
+                "flood_time_tick": 5,  # time of flood
+                "flood_severity_probability": (0.5, 1.2),  # Bounds between a Uniform distribution of the flood severity
+                "seed": 1  # The seed used to generate pseudo random numbers
+            }
+
+        self.flood_time_tick = network_dynamics_dictionary['flood_time_tick']  # The exact tick on which a flood occurs
+        self.flood_severity_probability = network_dynamics_dictionary['flood_severity_probability']  # flood bounds
+        self.number_of_households = network_dynamics_dictionary['number_of_households']  # Total number of household agents
+        self.seed = network_dynamics_dictionary['seed'] # The model seed
+        self.agent_interaction_dictionary = agent_interaction_dictionary  # The dictionary of the agent's interaction variables
+
+        super().__init__(seed=self.seed)
 
         # network
-        self.network = network  # Type of network to be created
-        self.probability_of_network_connection = probability_of_network_connection
-        self.number_of_edges = number_of_edges
-        self.number_of_nearest_neighbours = number_of_nearest_neighbours
+        self.network = network_dynamics_dictionary['network']  # Type of network to be created
+        self.probability_of_network_connection = network_dynamics_dictionary['probability_of_network_connection']
+        self.number_of_edges = network_dynamics_dictionary['number_of_edges']
+        self.number_of_nearest_neighbours = network_dynamics_dictionary['number_of_nearest_neighbours']
 
         # generating the graph according to the network used and the network parameters specified
         self.G = self.initialize_network()
@@ -74,26 +99,18 @@ class AdaptationModel(Model):
 
         # set schedule for agents, and defining agent attributes
         self.schedule = RandomActivation(self)  # Schedule for activating agents
-        # Impacts factors for each agent attribute to construct each agent's conviction
-        self.agent_attribute_dictionary = dict(wealth_factor=attribute_impact_factors[0],
-                                               child_factor=attribute_impact_factors[1],
-                                               house_size_factor=attribute_impact_factors[2],
-                                               education_factor=attribute_impact_factors[3],
-                                               social_factor=attribute_impact_factors[4],
-                                               age_factor=attribute_impact_factors[5])
 
-        # create households through initiating a household on each node of the network graph
+        # create households through initiating a household on each node of the network graph and create this
+        # household's attribute values using the provided attribute dictionary.
         for i, node in enumerate(self.G.nodes()):
-            household = Households(unique_id=i, model=self, radius_network=1, bias_change_per_tick=0.2,
-                                   tolerance=household_tolerance, attribute_dictionary=self.agent_attribute_dictionary)
+            household = Households(unique_id=i, model=self, radius_network=1, agent_interaction_dictionary=self.agent_interaction_dictionary)
             self.schedule.add(household)
             self.grid.place_agent(agent=household, node_id=node)
+            household.generate_attribute_values(attribute_dictionary)
 
         # now that the network is established, let's give each agent their connections in the social network
         for agent in self.schedule.agents:
             agent.find_social_network()
-            if random.random() < factor_with_children:
-                agent.has_child = True
 
         # Data collection setup to collect data
         model_metrics = {
@@ -110,7 +127,8 @@ class AdaptationModel(Model):
             "Conviction": "conviction",
             "FriendsCount": lambda a: a.count_friends(),
             "location": "location",
-            "HasChild": "has_child"
+            "HasChild": "has_child",
+            "AgentBias": "general_bias_in_network"
             # ... other reporters ...
         }
         # set up the data collector
@@ -211,8 +229,10 @@ class AdaptationModel(Model):
         """
         if self.schedule.steps == self.flood_time_tick:
             for agent in self.schedule.agents:
-                # Calculate actual flood depth as a random number between 0.5 and 1.2 times the estimated flood depth
-                agent.flood_depth_actual = random.uniform(0.5, 1.2) * agent.flood_depth_estimated
+                # Calculate actual flood depth as a random number between the defined severity times the estimated
+                # flood depth
+                a, b = self.flood_severity_probability  # splitting tuple in two bounds
+                agent.flood_depth_actual = random.uniform(a, b) * agent.flood_depth_estimated
                 # calculate the actual flood damage given the actual flood depth
                 agent.flood_damage_actual = calculate_basic_flood_damage(agent.flood_depth_actual)
                 agent.actual_flood_impact_on_bias = agent.flood_damage_actual - agent.flood_damage_estimated
