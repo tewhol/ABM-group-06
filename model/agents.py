@@ -158,7 +158,6 @@ class Households(Agent):
         # Checking for potential flood adaption using an auxiliary adaption factor, made of the bias in an agent's
         # network, the estimated flood damage and the difference in this estimation compared to an actual flooding
         adaption_factor = self.flood_damage_estimated + self.general_bias_in_network + self.actual_flood_impact_on_bias
-        # The adaption factor gets capped between 0 and 2
         if adaption_factor > self.adaption_threshold and not self.is_adapted:
             self.is_adapted = True
             print(
