@@ -28,13 +28,14 @@ class AdaptationModel(Model):
                  # Simplified argument for choosing flood map. Can currently be "harvey", "100yr", or "500yr".
                  flood_map_choice='harvey',
                  # A dictionary that provides all the necessary parameters to define the network of agents that is
-                 # going to be created and some of the dynamic variables that the model needs (like the tolerance and
-                 # the flood time)
+                 # going to be created and some of the dynamic variables that the model needs (like the flood time)
                  network_dynamics_dictionary=None,
                  # A dictionary with entries that respectively defines the impact factor and the general distribution
                  # for agent attributes. The latter is in a tuple with the letter marking the type and the numbers
                  # the parameters for the distribution.
-                 attribute_dictionary=None
+                 attribute_dictionary=None,
+                 # A dictionary that provides the values regarding the influence that agents can have on each other.
+                 agent_interaction_dynamics=None
                  ):
 
         # Defining the standard agent attributes variables and their distributions in case none are provided.
@@ -49,6 +50,16 @@ class AdaptationModel(Model):
                 "age": [0.2, 'N', (33.4, 5)]
             }
 
+        # Defining the standard values for agent interaction dynamics in case none are provided.
+        if agent_interaction_dynamics is None:
+            agent_interaction_dynamics = {
+                "household_tolerance": 0.1,  # the tolerance level for each agent
+                "bias_change_per_tick": 0.2,  # Bias change per tick when an agent when it's influenced by its network
+                "probability_positive_bias_change": 1,  # Probability that agent changes it's bias positively
+                "probability_negative_bias_change": 1,  # Probability that agent changes it's bias negatively
+                "adaption_threshold": 0.7  # Threshold of bias an agent needs to adapt
+            }
+
         # Defining the standard model network and network interaction/social dynamics in case none are provided.
         if network_dynamics_dictionary is None:
             network_dynamics_dictionary = {
@@ -59,7 +70,6 @@ class AdaptationModel(Model):
                 "probability_of_network_connection": 0.4,  # likeliness of edge being created between two nodes
                 "number_of_edges": 3,  # number of edges for BA network
                 "number_of_nearest_neighbours": 5,  # number of nearest neighbours for WS social network
-                "household_tolerance": 0.1,  # the tolerance level for each agent,
                 "flood_time_tick": 5,  # time of flood
                 "seed": 1  # The seed used to generate pseudo random numbers
             }
@@ -67,6 +77,7 @@ class AdaptationModel(Model):
         self.flood_time_tick = network_dynamics_dictionary['flood_time_tick']  # The exact tick on which a flood occurs
         self.number_of_households = network_dynamics_dictionary['number_of_households']  # Total number of household agents
         self.seed = network_dynamics_dictionary['seed'] # The model seed
+        self.agent_interaction_dynamics = agent_interaction_dynamics  # The dictionary of the agent's interaction variables
 
         super().__init__(seed=self.seed)
 
@@ -75,8 +86,6 @@ class AdaptationModel(Model):
         self.probability_of_network_connection = network_dynamics_dictionary['probability_of_network_connection']
         self.number_of_edges = network_dynamics_dictionary['number_of_edges']
         self.number_of_nearest_neighbours = network_dynamics_dictionary['number_of_nearest_neighbours']
-        # Determines the manner of similarity needed for households to influence each other
-        self.household_tolerance = network_dynamics_dictionary['household_tolerance']
 
         # generating the graph according to the network used and the network parameters specified
         self.G = self.initialize_network()
@@ -92,8 +101,7 @@ class AdaptationModel(Model):
         # create households through initiating a household on each node of the network graph and create this
         # household's attribute values using the provided attribute dictionary.
         for i, node in enumerate(self.G.nodes()):
-            household = Households(unique_id=i, model=self, radius_network=1, bias_change_per_tick=0.2,
-                                   tolerance=self.household_tolerance)
+            household = Households(unique_id=i, model=self, radius_network=1, agent_interaction_dynamics=self.agent_interaction_dynamics)
             self.schedule.add(household)
             self.grid.place_agent(agent=household, node_id=node)
             household.generate_attribute_values(attribute_dictionary)

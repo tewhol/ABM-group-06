@@ -19,15 +19,18 @@ class Households(Agent):
     In a real scenario, this would be based on actual geographical data or more complex logic.
     """
 
-    def __init__(self, unique_id, model, radius_network, tolerance, bias_change_per_tick):
+    def __init__(self, unique_id, model, radius_network, agent_interaction_dynamics):
         super().__init__(unique_id, model)
         self.is_adapted = False  # Initial adaptation status set to False
         self.actual_flood_impact_on_bias = 0  # Initial variable about how a real flood would impact an agent's bias
 
         # An attribute representing the built-up bias in an agents network
         self.general_bias_in_network = 0
-        self.bias_change_per_tick = bias_change_per_tick
-        self.tolerance = tolerance
+        self.household_tolerance = agent_interaction_dynamics['household_tolerance']
+        self.bias_change_per_tick = agent_interaction_dynamics['bias_change_per_tick']
+        self.adaption_threshold = agent_interaction_dynamics['adaption_threshold']
+        self.probability_positive_bias_change = agent_interaction_dynamics['probability_positive_bias_change']
+        self.probability_negative_bias_change = agent_interaction_dynamics['probability_negative_bias_change']
 
         # Attributes related to the size of one's social network, the radius and list of (friends/ friends of friends)
         self.radius_network = radius_network if radius_network is not None else 1
@@ -88,7 +91,7 @@ class Households(Agent):
     def generate_attribute_values(self, attribute_dictionary):
         """Generate attribute values for the household based on the provided attribute dictionary."""
         for attribute, values in attribute_dictionary.items():
-            # Ensure age is at least 18 and is an integer
+            # Ensure age is at least 18 and an integer
             if attribute == 'age':
                 age_value = max(int(self.attribute_distribution(values[1], values[2])), 18)
                 setattr(self, attribute, age_value)
@@ -115,29 +118,21 @@ class Households(Agent):
 
     # Ensuring that different types of distributions can be selected for agent attributes as the model input.
     def attribute_distribution(self, dist_type, dist_values):
-        """The function takes the attribute dictionary as input. This dictionary is created on the model level and
-        defines the agent attributes and their impacts on the model level. In this function the actual result value
-        of these predefined distribution can be calculated. The function requires chosen distribution values to
-        correspond to the distribution type: e.g. an exponential distribution only needs one (lambda) value"""
+        """Calculate attribute values based on the specified distribution type and values."""
         if dist_type == 'UI':
-            return random.randint(dist_values[0],
-                                  dist_values[1])  # the lower and upper bound, returns integer
+            return random.randint(dist_values[0], dist_values[1])
         elif dist_type == 'B':
-            return random.random() < dist_values  # The chosen probability for a boolean value
+            return random.random() < dist_values
         elif dist_type == 'U':
-            return random.uniform(dist_values[0],
-                                  dist_values[1])  # The lower and upper bound
+            return random.uniform(dist_values[0], dist_values[1])
         elif dist_type == 'N':
-            return np.random.normal(dist_values[0],
-                                    dist_values[1])  # The mean and deviation
+            return np.random.normal(dist_values[0], dist_values[1])
         elif dist_type == 'T':
-            return random.triangular(dist_values[0],
-                                     dist_values[1],
-                                     dist_values[2])  # The lower and upper bound and the mode
+            return random.triangular(dist_values[0], dist_values[1], dist_values[2])
         elif dist_type == 'E':
-            return random.expovariate(dist_values)  # The lambda for an exponential distribution
+            return random.expovariate(dist_values)
         else:
-            print(f'{dist_type} of household {self} has improper distribution values!')
+            print(f'Improper distribution type {dist_type} for household {self}')
 
     def bias_change(self):
         """Makes the bounds of which the agent will tolerate influence from agents different them itself.
@@ -150,10 +145,10 @@ class Households(Agent):
             # check for each social connection whether there is enough similarity between the agents to warrant a
             # change in opinion
             if lower_conviction <= self.model.schedule.agents[
-                agent].conviction < higher_conviction and random.random() < 0.5:
+                agent].conviction < higher_conviction and random.random() < self.probability_positive_bias_change:
                 if self.model.schedule.agents[agent].is_adapted:
                     self.general_bias_in_network += self.bias_change_per_tick
-                if not self.model.schedule.agents[agent].is_adapted and random.random() < 0.25:
+                if not self.model.schedule.agents[agent].is_adapted and random.random() < self.probability_negative_bias_change:
                     self.general_bias_in_network -= self.bias_change_per_tick
 
     def step(self):
@@ -169,7 +164,7 @@ class Households(Agent):
             adaption_factor = 0
         if adaption_factor > 2:
             adaption_factor = 2
-        if adaption_factor > 0.7 and not self.is_adapted:
+        if adaption_factor > self.adaption_threshold and not self.is_adapted:
             self.is_adapted = True
             print(
                 f'step: {self.model.schedule.steps} : {self.unique_id} adapted with a bias of {self.general_bias_in_network}'
