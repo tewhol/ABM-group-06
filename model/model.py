@@ -208,9 +208,7 @@ class AdaptationModel(Model):
         # Create legend with unique entries
         handles, labels = ax.get_legend_handles_labels()
         by_label = dict(zip(labels, handles))
-        ax.legend(by_label.values(), by_label.keys(), title="Red: not adapted, no concern, Blue: adapted, "
-                                                            "concerned\n Purple: adapted, no concern, Yellow: not "
-                                                            "adapted, concerned")
+        ax.legend(by_label.values(), by_label.keys(), title="Red: not adapted, Blue: adapted")
 
         # Customize plot with titles and labels
         plt.title(f'Model Domain with Agents at Step {self.schedule.steps}')
