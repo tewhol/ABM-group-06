@@ -116,6 +116,7 @@ class AdaptationModel(Model):
         # Data collection setup to collect data
         model_metrics = {
             "total_adapted_households": self.total_adapted_households,
+            "bias_change_all_agents": self.total_bias_change_all_households,
             # ... other reporters ...
         }
 
@@ -125,11 +126,11 @@ class AdaptationModel(Model):
             "FloodDepthActual": "flood_depth_actual",
             "FloodDamageActual": "flood_damage_actual",
             "IsAdapted": "is_adapted",
-            "identity": "identity",
+            "Identity": "identity",
             "FriendsCount": lambda a: a.count_friends(),
             "location": "location",
             "HasChild": "has_child",
-            "AgentBias": "general_bias_in_network"
+            "EndBias": "network_bias"
             # ... other reporters ...
         }
         # set up the data collector
@@ -187,9 +188,13 @@ class AdaptationModel(Model):
 
     def total_adapted_households(self):
         """Return the total number of households that have adapted."""
-        # BE CAREFUL THAT YOU MAY HAVE DIFFERENT AGENT TYPES SO YOU NEED TO FIRST CHECK IF THE AGENT IS ACTUALLY A HOUSEHOLD AGENT USING "ISINSTANCE"
-        adapted_count = sum([1 for agent in self.schedule.agents if isinstance(agent, Households) and agent.is_adapted])
+        adapted_count = sum([1 for agent in self.schedule.agents if agent.is_adapted])
         return adapted_count
+
+    def total_bias_change_all_households(self):
+        """Return the total amount of bias change of households"""
+        total_bias_change_all_households = sum([abs(agent.network_bias) for agent in self.schedule.agents])
+        return total_bias_change_all_households
 
     def plot_model_domain_with_agents(self):
         fig, ax = plt.subplots()
@@ -232,9 +237,12 @@ class AdaptationModel(Model):
                 # flood depth
                 a, b = self.flood_severity_probability  # splitting tuple in two bounds
                 agent.flood_depth_actual = random.uniform(a, b) * agent.flood_depth_estimated
-                # calculate the actual flood damage given the actual flood depth
-                agent.flood_damage_actual = calculate_basic_flood_damage(agent.flood_depth_actual)
-                agent.actual_flood_impact_on_bias += (agent.flood_damage_actual - agent.flood_damage_estimated) * agent.flood_impact_on_bias_factor
+                if not agent.is_adapted:
+                    # calculate the actual flood damage given the actual flood depth
+                    agent.flood_damage_actual = calculate_basic_flood_damage(agent.flood_depth_actual)
+                    # adapt agent bias regarding flood adaption depending on the difference of real and estimated damage
+                    agent.actual_flood_impact_on_bias += (agent.flood_damage_actual - agent.flood_damage_estimated) * agent.flood_impact_on_bias_factor
+
 
         # Collect data and advance the model by one step
         self.datacollector.collect(self)

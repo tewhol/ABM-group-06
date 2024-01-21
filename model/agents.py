@@ -25,7 +25,7 @@ class Households(Agent):
         self.actual_flood_impact_on_bias = 0  # Initial variable about how a real flood would impact an agent's bias
 
         # An attribute representing the built-up bias in an agents network
-        self.general_bias_in_network = 0
+        self.network_bias = 0
         self.tolerance = agent_interaction_dictionary['household_tolerance']
         self.bias_change_per_tick = agent_interaction_dictionary['bias_change_per_tick']
         self.flood_impact_on_bias_factor = agent_interaction_dictionary['flood_impact_on_bias_factor']
@@ -139,17 +139,17 @@ class Households(Agent):
         """Makes the bounds of which the agent will tolerate influence from agents different them itself.
         For each agent it will determine the dominant opinion within their network and return this. A positive
         number is pro adaption, negative is against."""
-        lower_identity = self.identity - self.tolerance if self.identity - self.tolerance > 0 else 0
-        higher_identity = self.identity + self.tolerance if self.identity + self.tolerance < 1 else 1
+        lower_bound_identity = self.identity - self.tolerance if self.identity - self.tolerance > 0 else 0
+        higher_bound_identity = self.identity + self.tolerance if self.identity + self.tolerance < 1 else 1
 
         for agent in self.social_network:
             # check for each social connection whether there is enough similarity between the agents to warrant a
             # change in opinion
-            if lower_identity <= self.model.schedule.agents[agent].identity <= higher_identity:
+            if lower_bound_identity <= self.model.schedule.agents[agent].identity <= higher_bound_identity:
                 if self.model.schedule.agents[agent].is_adapted and random.random() < self.probability_positive_bias_change:
-                        self.general_bias_in_network += self.bias_change_per_tick
+                        self.network_bias += self.bias_change_per_tick
                 if not self.model.schedule.agents[agent].is_adapted and random.random() < self.probability_negative_bias_change:
-                    self.general_bias_in_network -= self.bias_change_per_tick
+                    self.network_bias -= self.bias_change_per_tick
 
     def step(self):
         """Logic for adaptation based on estimated flood damage and a random chance.
@@ -158,10 +158,7 @@ class Households(Agent):
 
         # Checking for potential flood adaption using an auxiliary adaption factor, made of the bias in an agent's
         # network, the estimated flood damage and the difference in this estimation compared to an actual flooding
-        adaption_factor = self.flood_damage_estimated + self.general_bias_in_network + self.actual_flood_impact_on_bias
+        adaption_factor = self.flood_damage_estimated + self.network_bias + self.actual_flood_impact_on_bias
         if adaption_factor > self.adaption_threshold and not self.is_adapted:
             self.is_adapted = True
-            print(
-                f'step: {self.model.schedule.steps} : {self.unique_id} adapted with a bias of {self.general_bias_in_network}'
-                f' and a estimated damage of {self.flood_damage_estimated}!')
         self.age += 0.25  # ageing every tick
