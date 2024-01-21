@@ -44,7 +44,7 @@ class Households(Agent):
         self.age = 0  # Potential values: at least 18
         self.social_preference = 0  # Potential values: between introvert -1 and extrovert is 1
         self.education_level = 0  # Potential values, integer: 0 low-level - 3 high level education
-        self.conviction = 0  # Potential values: between 0 and 1
+        self.identity = 0  # Potential values: between 0 and 1
 
         # getting flood map values
         # Get a random location on the map
@@ -98,12 +98,12 @@ class Households(Agent):
             else:
                 setattr(self, attribute, self.attribute_distribution(values[1], values[2]))
 
-        self.calculate_conviction(attribute_dictionary)
+        self.calculate_identity(attribute_dictionary)
 
-    def calculate_conviction(self, attribute_dictionary):
-        """Calculate the household's conviction by determining each attribute's share."""
+    def calculate_identity(self, attribute_dictionary):
+        """Calculate the household's identity by determining each attribute's share."""
         # By creating an auxiliary dictionary that defines how each partial share of the agent's attribute
-        # contributes to the agent's conviction.
+        # contributes to the agent's identity.
         factors = {
             'wealth': lambda x: x * attribute_dictionary['wealth'][0],
             'has_child': lambda x: attribute_dictionary['has_child'][0] if x else 0,  # No child means this partial is 0
@@ -114,7 +114,7 @@ class Households(Agent):
             'age': lambda x: (x / 100) * attribute_dictionary['age'][0]
         }
 
-        self.conviction = sum(factors[attribute](getattr(self, attribute)) for attribute in factors)
+        self.identity = sum(factors[attribute](getattr(self, attribute)) for attribute in factors)
 
     # Ensuring that different types of distributions can be selected for agent attributes as the model input.
     def attribute_distribution(self, dist_type, dist_values):
@@ -138,13 +138,13 @@ class Households(Agent):
         """Makes the bounds of which the agent will tolerate influence from agents different them itself.
         For each agent it will determine the dominant opinion within their network and return this. A positive
         number is pro adaption, negative is against."""
-        lower_conviction = self.conviction - self.tolerance if self.conviction - self.tolerance > 0 else 0
-        higher_conviction = self.conviction + self.tolerance if self.conviction + self.tolerance < 1 else 1
+        lower_identity = self.identity - self.tolerance if self.identity - self.tolerance > 0 else 0
+        higher_identity = self.identity + self.tolerance if self.identity + self.tolerance < 1 else 1
 
         for agent in self.social_network:
             # check for each social connection whether there is enough similarity between the agents to warrant a
             # change in opinion
-            if lower_conviction <= self.model.schedule.agents[agent].conviction <= higher_conviction:
+            if lower_identity <= self.model.schedule.agents[agent].identity <= higher_identity:
                 if self.model.schedule.agents[agent].is_adapted and random.random() < self.probability_positive_bias_change:
                         self.general_bias_in_network += self.bias_change_per_tick
                 if not self.model.schedule.agents[agent].is_adapted and random.random() < self.probability_negative_bias_change:

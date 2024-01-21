@@ -70,7 +70,7 @@ class AdaptationModel(Model):
                 "probability_of_network_connection": 0.4,  # likeliness of edge being created between two nodes
                 "number_of_edges": 3,  # number of edges for BA network
                 "number_of_nearest_neighbours": 5,  # number of nearest neighbours for WS social network
-                "flood_time_tick": 5,  # time of flood
+                "flood_time_tick": [5],  # time of flood
                 "flood_severity_probability": (0.5, 1.2),  # Bounds between a Uniform distribution of the flood severity
                 "seed": 1  # The seed used to generate pseudo random numbers
             }
@@ -124,7 +124,7 @@ class AdaptationModel(Model):
             "FloodDepthActual": "flood_depth_actual",
             "FloodDamageActual": "flood_damage_actual",
             "IsAdapted": "is_adapted",
-            "Conviction": "conviction",
+            "identity": "identity",
             "FriendsCount": lambda a: a.count_friends(),
             "location": "location",
             "HasChild": "has_child",
@@ -227,7 +227,7 @@ class AdaptationModel(Model):
         assume local flooding instead of global flooding). The actual flood depth can be 
         estimated differently
         """
-        if self.schedule.steps == self.flood_time_tick:
+        if self.schedule.steps in self.flood_time_tick:
             for agent in self.schedule.agents:
                 # Calculate actual flood depth as a random number between the defined severity times the estimated
                 # flood depth
@@ -235,7 +235,7 @@ class AdaptationModel(Model):
                 agent.flood_depth_actual = random.uniform(a, b) * agent.flood_depth_estimated
                 # calculate the actual flood damage given the actual flood depth
                 agent.flood_damage_actual = calculate_basic_flood_damage(agent.flood_depth_actual)
-                agent.actual_flood_impact_on_bias = agent.flood_damage_actual - agent.flood_damage_estimated
+                agent.actual_flood_impact_on_bias += agent.flood_damage_actual - agent.flood_damage_estimated
 
         # Collect data and advance the model by one step
         self.datacollector.collect(self)
