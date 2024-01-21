@@ -121,4 +121,4 @@ def run_model(iterations):
 
 if __name__ == "__main__":
     iterations = 30
-    run_model(iterations)
+    experiment = run_model(iterations)
