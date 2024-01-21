@@ -57,48 +57,68 @@ prob_positive_bias_change = 0.5  # Probability that agent changes it's bias posi
 prob_negative_bias_change = 0.1  # Probability that agent changes it's bias negatively
 adaption_threshold = 0.7  # Threshold of bias an agent needs to adapt
 
+
+def run_model(iterations):
+    all_results = []
+
+    for iteration in range(iterations):
+        # Create dictionaries that serve as model input
+        network_dynamics_dictionary = {
+            "network": network_type,
+            "number_of_households": num_households,
+            "probability_of_network_connection": prob_network_connection,
+            "number_of_edges": num_edges,
+            "number_of_nearest_neighbours": num_nearest_neighbours,
+            "flood_time_tick": flood_time_ticks,
+            "flood_severity_probability": (
+                lower_bound_flood_severity_probability, higher_bound_flood_severity_probability),
+            "seed": random_seed
+        }
+
+        attribute_dictionary = {
+            "wealth": [wealth_factor, wealth_distribution_type,
+                       (wealth_distribution_range_min, wealth_distribution_range_max)],
+            "has_child": [has_child_factor, has_child_distribution_type, (has_child_distribution_value)],
+            "house_size": [house_size_factor, house_size_distribution_type,
+                           (house_size_distribution_range_min, house_size_distribution_range_max)],
+            "house_type": [house_type_factor, house_type_distribution_type,
+                           (house_type_distribution_range_min, house_type_distribution_range_max)],
+            "education_level": [education_level_factor, education_level_distribution_type,
+                                (education_level_distribution_range_min, education_level_distribution_range_max)],
+            "social_preference": [social_preference_factor, social_preference_distribution_type, (
+                social_preference_distribution_range_min, social_preference_distribution_range_max)],
+            "age": [age_factor, age_distribution_type, (age_distribution_mean, age_distribution_std_dev)]
+        }
+
+        agent_interaction_dictionary = {
+            "household_tolerance": household_tolerance,
+            "bias_change_per_tick": bias_change_per_tick,
+            "flood_impact_on_bias_factor": flood_impact_on_bias_factor,
+            "probability_positive_bias_change": prob_positive_bias_change,
+            "probability_negative_bias_change": prob_negative_bias_change,
+            "adaption_threshold": adaption_threshold
+        }
+
+        # Initialize the Adaptation Model with 50 household agents.
+        model = AdaptationModel(
+            network_dynamics_dictionary=network_dynamics_dictionary,
+            attribute_dictionary=attribute_dictionary,
+            agent_interaction_dictionary=agent_interaction_dictionary
+        )
+
+        # Run the model for 80 steps and generate plots every 5 steps.
+        for step in range(80):
+            model.step()
+
+        agent_data = model.datacollector.get_agent_vars_dataframe()
+        model_data = model.datacollector.get_model_vars_dataframe()
+
+        result = [iteration, agent_data, model_data]
+        all_results.append(result)
+
+    return all_results
+
+
 if __name__ == "__main__":
-    # Create dictionaries
-    network_dynamics_dictionary = {
-        "network": network_type,
-        "number_of_households": num_households,
-        "probability_of_network_connection": prob_network_connection,
-        "number_of_edges": num_edges,
-        "number_of_nearest_neighbours": num_nearest_neighbours,
-        "flood_time_tick": flood_time_ticks,
-        "flood_severity_probability": (lower_bound_flood_severity_probability, higher_bound_flood_severity_probability),
-        "seed": random_seed
-    }
-
-    attribute_dictionary = {
-        "wealth": [wealth_factor, wealth_distribution_type, (wealth_distribution_range_min, wealth_distribution_range_max)],
-        "has_child": [has_child_factor, has_child_distribution_type, (has_child_distribution_value)],
-        "house_size": [house_size_factor, house_size_distribution_type, (house_size_distribution_range_min, house_size_distribution_range_max)],
-        "house_type": [house_type_factor, house_type_distribution_type, (house_type_distribution_range_min, house_type_distribution_range_max)],
-        "education_level": [education_level_factor, education_level_distribution_type, (education_level_distribution_range_min, education_level_distribution_range_max)],
-        "social_preference": [social_preference_factor, social_preference_distribution_type, (social_preference_distribution_range_min, social_preference_distribution_range_max)],
-        "age": [age_factor, age_distribution_type, (age_distribution_mean, age_distribution_std_dev)]
-    }
-
-    agent_interaction_dictionary = {
-        "household_tolerance": household_tolerance,
-        "bias_change_per_tick": bias_change_per_tick,
-        "flood_impact_on_bias_factor": flood_impact_on_bias_factor,
-        "probability_positive_bias_change": prob_positive_bias_change,
-        "probability_negative_bias_change": prob_negative_bias_change,
-        "adaption_threshold": adaption_threshold
-    }
-
-    # Initialize the Adaptation Model with 50 household agents.
-    model = AdaptationModel(
-        network_dynamics_dictionary=network_dynamics_dictionary,
-        attribute_dictionary=attribute_dictionary,
-        agent_interaction_dictionary=agent_interaction_dictionary
-    )
-
-    # Run the model for 80 steps and generate plots every 5 steps.
-    for step in range(80):
-        model.step()
-
-    agent_data = model.datacollector.get_agent_vars_dataframe()
-    model_data = model.datacollector.get_model_vars_dataframe()
+    iterations = 30
+    run_model(iterations)
