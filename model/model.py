@@ -53,10 +53,11 @@ class AdaptationModel(Model):
         # Defining the standard values for agent interaction dynamics in case none are provided.
         if agent_interaction_dictionary is None:
             agent_interaction_dictionary = {
-                "household_tolerance": 0.1,  # the tolerance level for each agent
+                "household_tolerance": 0.15,  # the tolerance level for each agent
                 "bias_change_per_tick": 0.2,  # Bias change per tick when an agent when it's influenced by its network
-                "probability_positive_bias_change": 1,  # Probability that agent changes it's bias positively
-                "probability_negative_bias_change": 1,  # Probability that agent changes it's bias negatively
+                "flood_impact_on_bias_factor": 1,  # Defines factor regarding the actual and expected damage of flooding
+                "probability_positive_bias_change": 0.5,  # Probability that agent changes it's bias positively
+                "probability_negative_bias_change": 0.1,  # Probability that agent changes it's bias negatively
                 "adaption_threshold": 0.7  # Threshold of bias an agent needs to adapt
             }
 
@@ -235,7 +236,7 @@ class AdaptationModel(Model):
                 agent.flood_depth_actual = random.uniform(a, b) * agent.flood_depth_estimated
                 # calculate the actual flood damage given the actual flood depth
                 agent.flood_damage_actual = calculate_basic_flood_damage(agent.flood_depth_actual)
-                agent.actual_flood_impact_on_bias += agent.flood_damage_actual - agent.flood_damage_estimated
+                agent.actual_flood_impact_on_bias += (agent.flood_damage_actual - agent.flood_damage_estimated) * agent.flood_impact_on_bias_factor
 
         # Collect data and advance the model by one step
         self.datacollector.collect(self)

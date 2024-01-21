@@ -28,6 +28,7 @@ class Households(Agent):
         self.general_bias_in_network = 0
         self.tolerance = agent_interaction_dictionary['household_tolerance']
         self.bias_change_per_tick = agent_interaction_dictionary['bias_change_per_tick']
+        self.flood_impact_on_bias_factor = agent_interaction_dictionary['flood_impact_on_bias_factor']
         self.adaption_threshold = agent_interaction_dictionary['adaption_threshold']
         self.probability_positive_bias_change = agent_interaction_dictionary['probability_positive_bias_change']
         self.probability_negative_bias_change = agent_interaction_dictionary['probability_negative_bias_change']
