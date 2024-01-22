@@ -29,28 +29,33 @@ class Households(Agent):
                  probability_negative_bias_change,  # Probability that agent changes its bias negatively
                  wealth_factor,  # Factor affecting the importance of wealth on the household identity
                  wealth_distribution_type,  # Type of distribution for wealth (e.g., 'UI' for Uniform, 'N' for Normal)
-                 wealth_distribution_range,  # Range for wealth distribution
+                 wealth_distribution_range_min,  # Range for wealth distribution
+                 wealth_distribution_range_max,
                  has_child_factor,  # Factor affecting the importance of has_child on the household identity
                  has_child_distribution_type,  # Type of distribution for has_child (e.g., 'B' for Bernoulli)
                  has_child_distribution_value,  # Value for has_child distribution
                  house_size_factor,  # Factor affecting the importance of house_size on the household identity
                  house_size_distribution_type,  # Type of distribution for house_size (e.g., 'UI' for Uniform)
-                 house_size_distribution_range,  # Range for house_size distribution
+                 house_size_distribution_range_min,  # Range for house_size distribution
+                 house_size_distribution_range_max,
                  house_type_factor,  # Factor affecting the importance of house_type on the household identity
                  house_type_distribution_type,  # Type of distribution for house_type (e.g., 'UI' for Uniform)
-                 house_type_distribution_range,  # Range for house_type distribution
+                 house_type_distribution_range_min,  # Range for house_type distribution
+                 house_type_distribution_range_max,
                  education_level_factor,  # Factor affecting the importance of education_level on the household identity
                  education_level_distribution_type,  # Type of distribution for education_level (e.g., 'UI' for Uniform)
-                 education_level_distribution_range,  # Range for education_level distribution
-                 social_preference_factor,
-                 # Factor affecting the importance of social_preference on the household identity
-                 social_preference_distribution_type,
-                 # Type of distribution for social_preference (e.g., 'U' for Uniform)
-                 social_preference_distribution_range,  # Range for social_preference distribution
+                 education_level_distribution_range_min,  # Range for education_level distribution
+                 education_level_distribution_range_max,
+                 social_preference_factor,  # Factor affecting the importance of social_preference on the household identity
+                 social_preference_distribution_type,  # Type of distribution for social_preference (e.g., 'U' for Uniform)
+                 social_preference_distribution_range_min,  # Range for social_preference distribution
+                 social_preference_distribution_range_max,
                  age_factor,  # Factor affecting the importance of age on the household identity
                  age_distribution_type,  # Type of distribution for age (e.g., 'N' for Normal)
-                 age_distribution_params  # Parameters for age distribution
+                 age_distribution_mean,  # Parameters for age distribution
+                 age_distribution_std_dev,  # Parameters for age distribution
                  ):
+
         super().__init__(unique_id, model)
         self.is_adapted = False  # Initial adaptation status set to False
         self.actual_flood_impact_on_bias = 0  # Initial variable about how a real flood would impact an agent's bias
@@ -81,25 +86,25 @@ class Households(Agent):
         # Additional class attributes
         self.wealth_factor = wealth_factor
         self.wealth_distribution_type = wealth_distribution_type
-        self.wealth_distribution_range = wealth_distribution_range
+        self.wealth_distribution_range = (wealth_distribution_range_min, wealth_distribution_range_max)
         self.has_child_factor = has_child_factor
         self.has_child_distribution_type = has_child_distribution_type
         self.has_child_distribution_value = has_child_distribution_value
         self.house_size_factor = house_size_factor
         self.house_size_distribution_type = house_size_distribution_type
-        self.house_size_distribution_range = house_size_distribution_range
+        self.house_size_distribution_range = (house_size_distribution_range_min, house_size_distribution_range_max)
         self.house_type_factor = house_type_factor
         self.house_type_distribution_type = house_type_distribution_type
-        self.house_type_distribution_range = house_type_distribution_range
+        self.house_type_distribution_range = (house_type_distribution_range_min, house_type_distribution_range_max)
         self.education_level_factor = education_level_factor
         self.education_level_distribution_type = education_level_distribution_type
-        self.education_level_distribution_range = education_level_distribution_range
+        self.education_level_distribution_range = (education_level_distribution_range_min, education_level_distribution_range_max)
         self.social_preference_factor = social_preference_factor
         self.social_preference_distribution_type = social_preference_distribution_type
-        self.social_preference_distribution_range = social_preference_distribution_range
+        self.social_preference_distribution_range = (social_preference_distribution_range_min, social_preference_distribution_range_max)
         self.age_factor = age_factor
         self.age_distribution_type = age_distribution_type
-        self.age_distribution_params = age_distribution_params
+        self.age_distribution_params = (age_distribution_mean, age_distribution_std_dev)
 
         # getting flood map values
         # Get a random location on the map

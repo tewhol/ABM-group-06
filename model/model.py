@@ -36,25 +36,31 @@ class AdaptationModel(Model):
                  # Agent attributes
                  wealth_factor=None,  # Factor affecting the importance of wealth on the household identity
                  wealth_distribution_type=None,  # Type of distribution for wealth (e.g., 'UI' for Uniform, 'N' for Normal)
-                 wealth_distribution_range=None,  # Range for wealth distribution
+                 wealth_distribution_range_min=None,  # Range for wealth distribution
+                 wealth_distribution_range_max=None,
                  has_child_factor=None,  # Factor affecting the importance of has_child on the household identity
                  has_child_distribution_type=None,  # Type of distribution for has_child (e.g., 'B' for Bernoulli)
                  has_child_distribution_value=None,  # Value for has_child distribution
                  house_size_factor=None,  # Factor affecting the importance of house_size on the household identity
                  house_size_distribution_type=None,  # Type of distribution for house_size (e.g., 'UI' for Uniform)
-                 house_size_distribution_range=None,  # Range for house_size distribution
+                 house_size_distribution_range_min=None,  # Range for house_size distribution
+                 house_size_distribution_range_max=None,
                  house_type_factor=None,  # Factor affecting the importance of house_type on the household identity
                  house_type_distribution_type=None,  # Type of distribution for house_type (e.g., 'UI' for Uniform)
-                 house_type_distribution_range=None,  # Range for house_type distribution
+                 house_type_distribution_range_min=None,  # Range for house_type distribution
+                 house_type_distribution_range_max=None,
                  education_level_factor=None,  # Factor affecting the importance of education_level on the household identity
                  education_level_distribution_type=None,  # Type of distribution for education_level (e.g., 'UI' for Uniform)
-                 education_level_distribution_range=None,  # Range for education_level distribution
+                 education_level_distribution_range_min=None,  # Range for education_level distribution
+                 education_level_distribution_range_max=None,
                  social_preference_factor=None,  # Factor affecting the importance of social_preference on the household identity
                  social_preference_distribution_type=None,  # Type of distribution for social_preference (e.g., 'U' for Uniform)
-                 social_preference_distribution_range=None,  # Range for social_preference distribution
+                 social_preference_distribution_range_min=None,  # Range for social_preference distribution
+                 social_preference_distribution_range_max=None,
                  age_factor=None,  # Factor affecting the importance of age on the household identity
                  age_distribution_type=None,  # Type of distribution for age (e.g., 'N' for Normal)
-                 age_distribution_params=None,  # Parameters for age distribution
+                 age_distribution_mean=None,  # Parameters for age distribution
+                 age_distribution_std_dev=None,  # Parameters for age distribution
 
                  # Agent interaction dynamics
                  household_tolerance=None,  # Tolerance level for each agent
@@ -88,32 +94,44 @@ class AdaptationModel(Model):
         # Defining the standard agent attributes variables and their distributions in case none are provided.
         if wealth_distribution_type is None:
             wealth_distribution_type = 'UI'
-        if wealth_distribution_range is None:
-            wealth_distribution_range = (0, 3)
+        if wealth_distribution_range_min is None:
+            wealth_distribution_range = 0
+        if wealth_distribution_range_max is None:
+            wealth_distribution_range = 3
         if has_child_distribution_type is None:
             has_child_distribution_type = 'B'
         if has_child_distribution_value is None:
-            has_child_distribution_value = (0.2)
+            has_child_distribution_value = 0.2
         if house_size_distribution_type is None:
             house_size_distribution_type = 'UI'
-        if house_size_distribution_range is None:
-            house_size_distribution_range = (0, 2)
+        if house_size_distribution_range_min is None:
+            house_size_distribution_range = 0
+        if house_size_distribution_range_max is None:
+            house_size_distribution_range = 2
         if house_type_distribution_type is None:
             house_type_distribution_type = 'UI'
-        if house_type_distribution_range is None:
-            house_type_distribution_range = (0, 1)
+        if house_type_distribution_range_min is None:
+            house_type_distribution_range = 0
+        if house_type_distribution_range_max is None:
+            house_type_distribution_range = 1
         if education_level_distribution_type is None:
             education_level_distribution_type = 'UI'
-        if education_level_distribution_range is None:
-            education_level_distribution_range = (0, 3)
+        if education_level_distribution_range_min is None:
+            education_level_distribution_range = 0
+        if education_level_distribution_range_max is None:
+            education_level_distribution_range = 3
         if social_preference_distribution_type is None:
             social_preference_distribution_type = 'U'
-        if social_preference_distribution_range is None:
-            social_preference_distribution_range = (-1, 1)
+        if social_preference_distribution_range_min is None:
+            social_preference_distribution_range = -1
+        if social_preference_distribution_range_max is None:
+            social_preference_distribution_range = 1
         if age_distribution_type is None:
             age_distribution_type = 'N'
-        if age_distribution_params is None:
-            age_distribution_params = (33.4, 5)
+        if age_distribution_mean is None:
+            age_distribution_params = 33.4
+        if age_distribution_std_dev is None:
+            age_distribution_params = 5
 
         # Defining the standard values for agent interaction dynamics in case none are provided.
         if household_tolerance is None:
@@ -166,25 +184,31 @@ class AdaptationModel(Model):
                                    probability_negative_bias_change=prob_negative_bias_change,
                                    wealth_factor=wealth_factor,
                                    wealth_distribution_type=wealth_distribution_type,
-                                   wealth_distribution_range=wealth_distribution_range,
+                                   wealth_distribution_range_min=wealth_distribution_range_min,
+                                   wealth_distribution_range_max=wealth_distribution_range_max,
                                    has_child_factor=has_child_factor,
                                    has_child_distribution_type=has_child_distribution_type,
                                    has_child_distribution_value=has_child_distribution_value,
                                    house_size_factor=house_size_factor,
                                    house_size_distribution_type=house_size_distribution_type,
-                                   house_size_distribution_range=house_size_distribution_range,
+                                   house_size_distribution_range_min=house_size_distribution_range_min,
+                                   house_size_distribution_range_max=house_size_distribution_range_max,
                                    house_type_factor=house_type_factor,
                                    house_type_distribution_type=house_type_distribution_type,
-                                   house_type_distribution_range=house_type_distribution_range,
+                                   house_type_distribution_range_min=house_type_distribution_range_min,
+                                   house_type_distribution_range_max=house_type_distribution_range_max,
                                    education_level_factor=education_level_factor,
                                    education_level_distribution_type=education_level_distribution_type,
-                                   education_level_distribution_range=education_level_distribution_range,
+                                   education_level_distribution_range_min=education_level_distribution_range_min,
+                                   education_level_distribution_range_max=education_level_distribution_range_max,
                                    social_preference_factor=social_preference_factor,
                                    social_preference_distribution_type=social_preference_distribution_type,
-                                   social_preference_distribution_range=social_preference_distribution_range,
+                                   social_preference_distribution_range_min=social_preference_distribution_range_min,
+                                   social_preference_distribution_range_max=social_preference_distribution_range_max,
                                    age_factor=age_factor,
                                    age_distribution_type=age_distribution_type,
-                                   age_distribution_params=age_distribution_params)
+                                   age_distribution_mean=age_distribution_mean,
+                                   age_distribution_std_dev=age_distribution_std_dev)
             self.schedule.add(household)
             self.grid.place_agent(agent=household, node_id=node)
             household.generate_attribute_values()
