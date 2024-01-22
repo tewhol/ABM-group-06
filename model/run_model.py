@@ -122,13 +122,13 @@ def run_model(iterations, run_time_in_ticks):
 
 
 def show_results(experiment_values):
-    for i in experiment_values:
+    for i, experiment in enumerate(experiment_values):
         iteration, agent_result, model_result = experiment_values[i]
-
-    pass
+        print(agent_result)
 
 
 if __name__ == "__main__":
-    iterations = 30
+    iterations = 1
     run_time_model = 80
     experiment = run_model(iterations, run_time_model)
+    show_results(experiment)
