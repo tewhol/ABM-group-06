@@ -87,12 +87,10 @@ def run_model(iterations, run_time_in_ticks):
             house_type_distribution_range=(house_type_distribution_range_min, house_type_distribution_range_max),
             education_level_factor=education_level_factor,
             education_level_distribution_type=education_level_distribution_type,
-            education_level_distribution_range=(
-            education_level_distribution_range_min, education_level_distribution_range_max),
+            education_level_distribution_range=(education_level_distribution_range_min, education_level_distribution_range_max),
             social_preference_factor=social_preference_factor,
             social_preference_distribution_type=social_preference_distribution_type,
-            social_preference_distribution_range=(
-            social_preference_distribution_range_min, social_preference_distribution_range_max),
+            social_preference_distribution_range=(social_preference_distribution_range_min, social_preference_distribution_range_max),
             age_factor=age_factor,
             age_distribution_type=age_distribution_type,
             age_distribution_params=(age_distribution_mean, age_distribution_std_dev),

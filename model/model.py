@@ -93,7 +93,7 @@ class AdaptationModel(Model):
         if has_child_distribution_type is None:
             has_child_distribution_type = 'B'
         if has_child_distribution_value is None:
-            has_child_distribution_value = 0.2
+            has_child_distribution_value = (0.2)
         if house_size_distribution_type is None:
             house_size_distribution_type = 'UI'
         if house_size_distribution_range is None:
@@ -141,38 +141,7 @@ class AdaptationModel(Model):
         self.higher_bound_flood_severity_probability = higher_bound_flood_severity_probability
         self.random_seed = random_seed
 
-        # Assigning attributes from agent attributes
-        self.wealth_factor = wealth_factor
-        self.wealth_distribution_type = wealth_distribution_type
-        self.wealth_distribution_range = wealth_distribution_range
-        self.has_child_factor = has_child_factor
-        self.has_child_distribution_type = has_child_distribution_type
-        self.has_child_distribution_value = has_child_distribution_value
-        self.house_size_factor = house_size_factor
-        self.house_size_distribution_type = house_size_distribution_type
-        self.house_size_distribution_range = house_size_distribution_range
-        self.house_type_factor = house_type_factor
-        self.house_type_distribution_type = house_type_distribution_type
-        self.house_type_distribution_range = house_type_distribution_range
-        self.education_level_factor = education_level_factor
-        self.education_level_distribution_type = education_level_distribution_type
-        self.education_level_distribution_range = education_level_distribution_range
-        self.social_preference_factor = social_preference_factor
-        self.social_preference_distribution_type = social_preference_distribution_type
-        self.social_preference_distribution_range = social_preference_distribution_range
-        self.age_factor = age_factor
-        self.age_distribution_type = age_distribution_type
-        self.age_distribution_params = age_distribution_params
-
-        # Assigning attributes from agent interaction dynamics
-        self.household_tolerance = household_tolerance
-        self.bias_change_per_tick = bias_change_per_tick
-        self.flood_impact_on_bias_factor = flood_impact_on_bias_factor
-        self.prob_positive_bias_change = prob_positive_bias_change
-        self.prob_negative_bias_change = prob_negative_bias_change
-        self.adaption_threshold = adaption_threshold
-
-        super().__init__(seed=self.seed)
+        super().__init__(seed=self.random_seed)
 
         # generating the graph according to the network used and the network parameters specified
         self.G = self.initialize_network()
@@ -188,10 +157,37 @@ class AdaptationModel(Model):
         # create households through initiating a household on each node of the network graph and create this
         # household's attribute values using the provided attribute dictionary.
         for i, node in enumerate(self.G.nodes()):
-            household = Households(unique_id=i, model=self, radius_network=1, agent_interaction_dictionary=self.agent_interaction_dictionary)
+            household = Households(unique_id=i, model=self, radius_network=1,
+                                   tolerance=household_tolerance,
+                                   bias_change_per_tick=bias_change_per_tick,
+                                   flood_impact_on_bias_factor=flood_impact_on_bias_factor,
+                                   adaption_threshold=adaption_threshold,
+                                   probability_positive_bias_change=prob_positive_bias_change,
+                                   probability_negative_bias_change=prob_negative_bias_change,
+                                   wealth_factor=wealth_factor,
+                                   wealth_distribution_type=wealth_distribution_type,
+                                   wealth_distribution_range=wealth_distribution_range,
+                                   has_child_factor=has_child_factor,
+                                   has_child_distribution_type=has_child_distribution_type,
+                                   has_child_distribution_value=has_child_distribution_value,
+                                   house_size_factor=house_size_factor,
+                                   house_size_distribution_type=house_size_distribution_type,
+                                   house_size_distribution_range=house_size_distribution_range,
+                                   house_type_factor=house_type_factor,
+                                   house_type_distribution_type=house_type_distribution_type,
+                                   house_type_distribution_range=house_type_distribution_range,
+                                   education_level_factor=education_level_factor,
+                                   education_level_distribution_type=education_level_distribution_type,
+                                   education_level_distribution_range=education_level_distribution_range,
+                                   social_preference_factor=social_preference_factor,
+                                   social_preference_distribution_type=social_preference_distribution_type,
+                                   social_preference_distribution_range=social_preference_distribution_range,
+                                   age_factor=age_factor,
+                                   age_distribution_type=age_distribution_type,
+                                   age_distribution_params=age_distribution_params)
             self.schedule.add(household)
             self.grid.place_agent(agent=household, node_id=node)
-            household.generate_attribute_values(attribute_dictionary)
+            household.generate_attribute_values()
 
         # now that the network is established, let's give each agent their connections in the social network
         for agent in self.schedule.agents:
@@ -224,25 +220,25 @@ class AdaptationModel(Model):
         """
         Initialize and return the social network graph based on the provided network type using pattern matching.
         """
-        if self.network == 'erdos_renyi':
-            return nx.erdos_renyi_graph(n=self.number_of_households,
-                                        p=self.number_of_nearest_neighbours / self.number_of_households,
-                                        seed=self.seed)
-        elif self.network == 'barabasi_albert':
-            return nx.barabasi_albert_graph(n=self.number_of_households,
+        if self.network_type == 'erdos_renyi':
+            return nx.erdos_renyi_graph(n=self.num_households,
+                                        p=self.num_nearest_neighbours / self.num_households,
+                                        seed=self.random_seed)
+        elif self.network_type == 'barabasi_albert':
+            return nx.barabasi_albert_graph(n=self.num_households,
                                             m=self.number_of_edges,
-                                            seed=self.seed)
-        elif self.network == 'watts_strogatz':
-            return nx.watts_strogatz_graph(n=self.number_of_households,
-                                           k=self.number_of_nearest_neighbours,
-                                           p=self.probability_of_network_connection,
-                                           seed=self.seed)
-        elif self.network == 'no_network':
+                                            seed=self.random_seed)
+        elif self.network_type == 'watts_strogatz':
+            return nx.watts_strogatz_graph(n=self.num_households,
+                                           k=self.num_nearest_neighbours,
+                                           p=self.prob_network_connection,
+                                           seed=self.random_seed)
+        elif self.network_type == 'no_network':
             G = nx.Graph()
-            G.add_nodes_from(range(self.number_of_households))
+            G.add_nodes_from(range(self.num_households))
             return G
         else:
-            raise ValueError(f"Unknown network type: '{self.network}'. "
+            raise ValueError(f"Unknown network type: '{self.network_type}'. "
                              f"Currently implemented network types are: "
                              f"'erdos_renyi', 'barabasi_albert', 'watts_strogatz', and 'no_network'")
 
@@ -315,12 +311,11 @@ class AdaptationModel(Model):
         assume local flooding instead of global flooding). The actual flood depth can be 
         estimated differently
         """
-        if self.schedule.steps in self.flood_time_tick:
+        if self.schedule.steps in self.flood_time_ticks:
             for agent in self.schedule.agents:
                 # Calculate actual flood depth as a random number between the defined severity times the estimated
                 # flood depth
-                a, b = self.flood_severity_probability  # splitting tuple in two bounds
-                agent.flood_depth_actual = random.uniform(a, b) * agent.flood_depth_estimated
+                agent.flood_depth_actual = random.uniform(self.lower_bound_flood_severity_probability, self.higher_bound_flood_severity_probability) * agent.flood_depth_estimated
                 if not agent.is_adapted:
                     # calculate the actual flood damage given the actual flood depth
                     agent.flood_damage_actual = calculate_basic_flood_damage(agent.flood_depth_actual)
