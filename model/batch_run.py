@@ -12,7 +12,7 @@ parameters = {
     'prob_network_connection': 0.4,
     'num_edges': 3,
     'num_nearest_neighbours': 5,
-    'flood_time_ticks': [5],
+    'flood_time_ticks': 5,
     'lower_bound_flood_severity_probability': 0.5,
     'higher_bound_flood_severity_probability': 1.2,
     'random_seed': 1,
@@ -52,9 +52,9 @@ parameters = {
 }
 
 # Other input variables for the mesa batch run function
-iterations = 7  # number of iterations for each parameter combination
+iterations = 100  # number of iterations for each parameter combination
 max_steps = 80  # max steps of each model run/ iteration
-number_processes = 1  # how many processors are used
+number_processes = None  # how many processors are used
 data_collection_period = 1  # number of steps after which data is collected by the model and agent data collectors
 display_progress = True  # To display the progress on the batch runs
 
@@ -68,5 +68,4 @@ if __name__ == "__main__":
         data_collection_period=data_collection_period,
         display_progress=display_progress,
     )
-    print(results)
 

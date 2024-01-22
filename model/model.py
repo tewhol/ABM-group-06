@@ -154,7 +154,7 @@ class AdaptationModel(Model):
         self.prob_network_connection = prob_network_connection
         self.num_edges = num_edges
         self.num_nearest_neighbours = num_nearest_neighbours
-        self.flood_time_ticks = flood_time_ticks
+        self.flood_time_ticks = [flood_time_ticks]
         self.lower_bound_flood_severity_probability = lower_bound_flood_severity_probability
         self.higher_bound_flood_severity_probability = higher_bound_flood_severity_probability
         self.random_seed = random_seed
