@@ -19,76 +19,160 @@ from functions import map_domain_gdf, floodplain_gdf
 
 # Define the AdaptationModel class
 class AdaptationModel(Model):
-    """
-    The main model running the simulation. It sets up the network of household agents,
-    simulates their behavior, and collects data. The network type can be adjusted based on study requirements.
-    """
-
     def __init__(self,
                  # Simplified argument for choosing flood map. Can currently be "harvey", "100yr", or "500yr".
                  flood_map_choice='harvey',
-                 # A dictionary that provides all the necessary parameters to define the network of agents that is
-                 # going to be created and some of the dynamic variables that the model needs (like the flood time)
-                 network_dynamics_dictionary=None,
-                 # A dictionary with entries that respectively defines the impact factor and the general distribution
-                 # for agent attributes. The latter is in a tuple with the letter marking the type and the numbers
-                 # the parameters for the distribution.
-                 attribute_dictionary=None,
-                 # A dictionary that provides the values regarding the influence that agents can have on each other.
-                 agent_interaction_dictionary=None
+                 # Network dynamics
+                 network_type=None,  # The social network structure used: "erdos_renyi", "barabasi_albert", "watts_strogatz", or "no_network"
+                 num_households=None,  # Number of household agents
+                 prob_network_connection=None,  # Likelihood of edge being created between two nodes
+                 num_edges=None,  # Number of edges for BA network
+                 num_nearest_neighbours=None,  # Number of nearest neighbours for WS social network
+                 flood_time_ticks=None,  # Time of flood
+                 lower_bound_flood_severity_probability=None,  # Lower bound for flood severity probability
+                 higher_bound_flood_severity_probability=None,  # Upper bound for flood severity probability
+                 random_seed=None,  # The seed used to generate pseudo random numbers
+
+                 # Agent attributes
+                 wealth_factor=None,  # Factor affecting the importance of wealth on the household identity
+                 wealth_distribution_type=None,  # Type of distribution for wealth (e.g., 'UI' for Uniform, 'N' for Normal)
+                 wealth_distribution_range=None,  # Range for wealth distribution
+                 has_child_factor=None,  # Factor affecting the importance of has_child on the household identity
+                 has_child_distribution_type=None,  # Type of distribution for has_child (e.g., 'B' for Bernoulli)
+                 has_child_distribution_value=None,  # Value for has_child distribution
+                 house_size_factor=None,  # Factor affecting the importance of house_size on the household identity
+                 house_size_distribution_type=None,  # Type of distribution for house_size (e.g., 'UI' for Uniform)
+                 house_size_distribution_range=None,  # Range for house_size distribution
+                 house_type_factor=None,  # Factor affecting the importance of house_type on the household identity
+                 house_type_distribution_type=None,  # Type of distribution for house_type (e.g., 'UI' for Uniform)
+                 house_type_distribution_range=None,  # Range for house_type distribution
+                 education_level_factor=None,  # Factor affecting the importance of education_level on the household identity
+                 education_level_distribution_type=None,  # Type of distribution for education_level (e.g., 'UI' for Uniform)
+                 education_level_distribution_range=None,  # Range for education_level distribution
+                 social_preference_factor=None,  # Factor affecting the importance of social_preference on the household identity
+                 social_preference_distribution_type=None,  # Type of distribution for social_preference (e.g., 'U' for Uniform)
+                 social_preference_distribution_range=None,  # Range for social_preference distribution
+                 age_factor=None,  # Factor affecting the importance of age on the household identity
+                 age_distribution_type=None,  # Type of distribution for age (e.g., 'N' for Normal)
+                 age_distribution_params=None,  # Parameters for age distribution
+
+                 # Agent interaction dynamics
+                 household_tolerance=None,  # Tolerance level for each agent
+                 bias_change_per_tick=None,  # Bias change per tick when an agent is influenced by its network
+                 flood_impact_on_bias_factor=None,  # Factor regarding the actual and expected damage of flooding
+                 prob_positive_bias_change=None,  # Probability that agent changes its bias positively
+                 prob_negative_bias_change=None,  # Probability that agent changes its bias negatively
+                 adaption_threshold=None  # Threshold of bias an agent needs to adapt
                  ):
 
         # Defining the standard agent attributes variables and their distributions in case none are provided.
-        if attribute_dictionary is None:
-            attribute_dictionary = {
-                "wealth": [0.2, 'UI', (0, 3)],
-                "has_child": [0.2, 'B', (0.2)],
-                "house_size": [0.05, 'UI', (0, 2)],
-                "house_type": [0.05, 'UI', (0, 1)],
-                "education_level": [0.05, 'UI', (0, 3)],
-                "social_preference": [0.2, 'U', (-1, 1)],
-                "age": [0.2, 'N', (33.4, 5)]
-            }
+        if network_type is None:
+            network_type = 'watts_strogatz'
+        if num_households is None:
+            num_households = 25
+        if prob_network_connection is None:
+            prob_network_connection = 0.4
+        if num_edges is None:
+            num_edges = 3
+        if num_nearest_neighbours is None:
+            num_nearest_neighbours = 5
+        if flood_time_ticks is None:
+            flood_time_ticks = [5]
+        if lower_bound_flood_severity_probability is None:
+            lower_bound_flood_severity_probability = 0.5
+        if higher_bound_flood_severity_probability is None:
+            higher_bound_flood_severity_probability = 1.2
+        if random_seed is None:
+            random_seed = 1
+
+        # Defining the standard agent attributes variables and their distributions in case none are provided.
+        if wealth_distribution_type is None:
+            wealth_distribution_type = 'UI'
+        if wealth_distribution_range is None:
+            wealth_distribution_range = (0, 3)
+        if has_child_distribution_type is None:
+            has_child_distribution_type = 'B'
+        if has_child_distribution_value is None:
+            has_child_distribution_value = 0.2
+        if house_size_distribution_type is None:
+            house_size_distribution_type = 'UI'
+        if house_size_distribution_range is None:
+            house_size_distribution_range = (0, 2)
+        if house_type_distribution_type is None:
+            house_type_distribution_type = 'UI'
+        if house_type_distribution_range is None:
+            house_type_distribution_range = (0, 1)
+        if education_level_distribution_type is None:
+            education_level_distribution_type = 'UI'
+        if education_level_distribution_range is None:
+            education_level_distribution_range = (0, 3)
+        if social_preference_distribution_type is None:
+            social_preference_distribution_type = 'U'
+        if social_preference_distribution_range is None:
+            social_preference_distribution_range = (-1, 1)
+        if age_distribution_type is None:
+            age_distribution_type = 'N'
+        if age_distribution_params is None:
+            age_distribution_params = (33.4, 5)
 
         # Defining the standard values for agent interaction dynamics in case none are provided.
-        if agent_interaction_dictionary is None:
-            agent_interaction_dictionary = {
-                "household_tolerance": 0.15,  # the tolerance level for each agent
-                "bias_change_per_tick": 0.2,  # Bias change per tick when an agent when it's influenced by its network
-                "flood_impact_on_bias_factor": 1,  # Defines factor regarding the actual and expected damage of flooding
-                "probability_positive_bias_change": 0.5,  # Probability that agent changes it's bias positively
-                "probability_negative_bias_change": 0.1,  # Probability that agent changes it's bias negatively
-                "adaption_threshold": 0.7  # Threshold of bias an agent needs to adapt
-            }
+        if household_tolerance is None:
+            household_tolerance = 0.15
+        if bias_change_per_tick is None:
+            bias_change_per_tick = 0.2
+        if flood_impact_on_bias_factor is None:
+            flood_impact_on_bias_factor = 1
+        if prob_positive_bias_change is None:
+            prob_positive_bias_change = 0.5
+        if prob_negative_bias_change is None:
+            prob_negative_bias_change = 0.1
+        if adaption_threshold is None:
+            adaption_threshold = 0.7
 
-        # Defining the standard model network and network interaction/social dynamics in case none are provided.
-        if network_dynamics_dictionary is None:
-            network_dynamics_dictionary = {
-                # The social network structure that is used. Can currently be
-                # "erdos_renyi", "barabasi_albert", "watts_strogatz", or "no_network"
-                "network": 'watts_strogatz',
-                "number_of_households": 25,  # number of household agents
-                "probability_of_network_connection": 0.4,  # likeliness of edge being created between two nodes
-                "number_of_edges": 3,  # number of edges for BA network
-                "number_of_nearest_neighbours": 5,  # number of nearest neighbours for WS social network
-                "flood_time_tick": [5],  # time of flood
-                "flood_severity_probability": (0.5, 1.2),  # Bounds between a Uniform distribution of the flood severity
-                "seed": 1  # The seed used to generate pseudo random numbers
-            }
+        # Assigning parameters as attributes
+        self.flood_map_choice = flood_map_choice
+        self.network_type = network_type
+        self.num_households = num_households
+        self.prob_network_connection = prob_network_connection
+        self.num_edges = num_edges
+        self.num_nearest_neighbours = num_nearest_neighbours
+        self.flood_time_ticks = flood_time_ticks
+        self.lower_bound_flood_severity_probability = lower_bound_flood_severity_probability
+        self.higher_bound_flood_severity_probability = higher_bound_flood_severity_probability
+        self.random_seed = random_seed
 
-        self.flood_time_tick = network_dynamics_dictionary['flood_time_tick']  # The exact tick on which a flood occurs
-        self.flood_severity_probability = network_dynamics_dictionary['flood_severity_probability']  # flood bounds
-        self.number_of_households = network_dynamics_dictionary['number_of_households']  # Total number of household agents
-        self.seed = network_dynamics_dictionary['seed'] # The model seed
-        self.agent_interaction_dictionary = agent_interaction_dictionary  # The dictionary of the agent's interaction variables
+        # Assigning attributes from agent attributes
+        self.wealth_factor = wealth_factor
+        self.wealth_distribution_type = wealth_distribution_type
+        self.wealth_distribution_range = wealth_distribution_range
+        self.has_child_factor = has_child_factor
+        self.has_child_distribution_type = has_child_distribution_type
+        self.has_child_distribution_value = has_child_distribution_value
+        self.house_size_factor = house_size_factor
+        self.house_size_distribution_type = house_size_distribution_type
+        self.house_size_distribution_range = house_size_distribution_range
+        self.house_type_factor = house_type_factor
+        self.house_type_distribution_type = house_type_distribution_type
+        self.house_type_distribution_range = house_type_distribution_range
+        self.education_level_factor = education_level_factor
+        self.education_level_distribution_type = education_level_distribution_type
+        self.education_level_distribution_range = education_level_distribution_range
+        self.social_preference_factor = social_preference_factor
+        self.social_preference_distribution_type = social_preference_distribution_type
+        self.social_preference_distribution_range = social_preference_distribution_range
+        self.age_factor = age_factor
+        self.age_distribution_type = age_distribution_type
+        self.age_distribution_params = age_distribution_params
+
+        # Assigning attributes from agent interaction dynamics
+        self.household_tolerance = household_tolerance
+        self.bias_change_per_tick = bias_change_per_tick
+        self.flood_impact_on_bias_factor = flood_impact_on_bias_factor
+        self.prob_positive_bias_change = prob_positive_bias_change
+        self.prob_negative_bias_change = prob_negative_bias_change
+        self.adaption_threshold = adaption_threshold
 
         super().__init__(seed=self.seed)
-
-        # network
-        self.network = network_dynamics_dictionary['network']  # Type of network to be created
-        self.probability_of_network_connection = network_dynamics_dictionary['probability_of_network_connection']
-        self.number_of_edges = network_dynamics_dictionary['number_of_edges']
-        self.number_of_nearest_neighbours = network_dynamics_dictionary['number_of_nearest_neighbours']
 
         # generating the graph according to the network used and the network parameters specified
         self.G = self.initialize_network()

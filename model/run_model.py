@@ -58,56 +58,54 @@ prob_negative_bias_change = 0.1  # Probability that agent changes it's bias nega
 adaption_threshold = 0.7  # Threshold of bias an agent needs to adapt
 
 
-def run_model(iterations):
+def run_model(iterations, run_time_in_ticks):
     all_results = []
 
     for iteration in range(iterations):
-        # Create dictionaries that serve as model input
-        network_dynamics_dictionary = {
-            "network": network_type,
-            "number_of_households": num_households,
-            "probability_of_network_connection": prob_network_connection,
-            "number_of_edges": num_edges,
-            "number_of_nearest_neighbours": num_nearest_neighbours,
-            "flood_time_tick": flood_time_ticks,
-            "flood_severity_probability": (
-                lower_bound_flood_severity_probability, higher_bound_flood_severity_probability),
-            "seed": random_seed
-        }
-
-        attribute_dictionary = {
-            "wealth": [wealth_factor, wealth_distribution_type,
-                       (wealth_distribution_range_min, wealth_distribution_range_max)],
-            "has_child": [has_child_factor, has_child_distribution_type, (has_child_distribution_value)],
-            "house_size": [house_size_factor, house_size_distribution_type,
-                           (house_size_distribution_range_min, house_size_distribution_range_max)],
-            "house_type": [house_type_factor, house_type_distribution_type,
-                           (house_type_distribution_range_min, house_type_distribution_range_max)],
-            "education_level": [education_level_factor, education_level_distribution_type,
-                                (education_level_distribution_range_min, education_level_distribution_range_max)],
-            "social_preference": [social_preference_factor, social_preference_distribution_type, (
-                social_preference_distribution_range_min, social_preference_distribution_range_max)],
-            "age": [age_factor, age_distribution_type, (age_distribution_mean, age_distribution_std_dev)]
-        }
-
-        agent_interaction_dictionary = {
-            "household_tolerance": household_tolerance,
-            "bias_change_per_tick": bias_change_per_tick,
-            "flood_impact_on_bias_factor": flood_impact_on_bias_factor,
-            "probability_positive_bias_change": prob_positive_bias_change,
-            "probability_negative_bias_change": prob_negative_bias_change,
-            "adaption_threshold": adaption_threshold
-        }
-
-        # Initialize the Adaptation Model with 50 household agents.
+        # Initialize the Adaptation Model with all input variables
         model = AdaptationModel(
-            network_dynamics_dictionary=network_dynamics_dictionary,
-            attribute_dictionary=attribute_dictionary,
-            agent_interaction_dictionary=agent_interaction_dictionary
+            network_type=network_type,
+            num_households=num_households,
+            prob_network_connection=prob_network_connection,
+            num_edges=num_edges,
+            num_nearest_neighbours=num_nearest_neighbours,
+            flood_time_ticks=flood_time_ticks,
+            lower_bound_flood_severity_probability=lower_bound_flood_severity_probability,
+            higher_bound_flood_severity_probability=higher_bound_flood_severity_probability,
+            random_seed=random_seed,
+            wealth_factor=wealth_factor,
+            wealth_distribution_type=wealth_distribution_type,
+            wealth_distribution_range=(wealth_distribution_range_min, wealth_distribution_range_max),
+            has_child_factor=has_child_factor,
+            has_child_distribution_type=has_child_distribution_type,
+            has_child_distribution_value=has_child_distribution_value,
+            house_size_factor=house_size_factor,
+            house_size_distribution_type=house_size_distribution_type,
+            house_size_distribution_range=(house_size_distribution_range_min, house_size_distribution_range_max),
+            house_type_factor=house_type_factor,
+            house_type_distribution_type=house_type_distribution_type,
+            house_type_distribution_range=(house_type_distribution_range_min, house_type_distribution_range_max),
+            education_level_factor=education_level_factor,
+            education_level_distribution_type=education_level_distribution_type,
+            education_level_distribution_range=(
+            education_level_distribution_range_min, education_level_distribution_range_max),
+            social_preference_factor=social_preference_factor,
+            social_preference_distribution_type=social_preference_distribution_type,
+            social_preference_distribution_range=(
+            social_preference_distribution_range_min, social_preference_distribution_range_max),
+            age_factor=age_factor,
+            age_distribution_type=age_distribution_type,
+            age_distribution_params=(age_distribution_mean, age_distribution_std_dev),
+            household_tolerance=household_tolerance,
+            bias_change_per_tick=bias_change_per_tick,
+            flood_impact_on_bias_factor=flood_impact_on_bias_factor,
+            prob_positive_bias_change=prob_positive_bias_change,
+            prob_negative_bias_change=prob_negative_bias_change,
+            adaption_threshold=adaption_threshold
         )
 
-        # Run the model for 80 steps and generate plots every 5 steps.
-        for step in range(80):
+        # Run the model for the given duration
+        for step in range(run_time_in_ticks):
             model.step()
 
         agent_data = model.datacollector.get_agent_vars_dataframe()
@@ -119,6 +117,14 @@ def run_model(iterations):
     return all_results
 
 
+def show_results(experiment_values):
+    for i in experiment_values:
+        iteration, agent_result, model_result = experiment_values[i]
+
+    pass
+
+
 if __name__ == "__main__":
     iterations = 30
-    experiment = run_model(iterations)
+    run_time_model = 80
+    experiment = run_model(iterations, run_time_model)
