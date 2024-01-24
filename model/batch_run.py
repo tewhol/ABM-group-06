@@ -52,7 +52,7 @@ parameters = {
 }
 
 # Other input variables for the mesa batch run function
-iterations = 100  # number of iterations for each parameter combination
+iterations = 1  # number of iterations for each parameter combination
 max_steps = 80  # max steps of each model run/ iteration
 number_processes = None  # how many processors are used
 data_collection_period = 1  # number of steps after which data is collected by the model and agent data collectors

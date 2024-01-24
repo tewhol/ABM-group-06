@@ -2,6 +2,7 @@ import random
 from model import AdaptationModel
 import matplotlib.pyplot as plt
 import networkx as nx
+import pandas as pd
 
 # Input values for network dynamics
 network_type = 'watts_strogatz'  # The social network structure that is used
@@ -122,9 +123,7 @@ def run_model(iterations, run_time_in_ticks):
 
 
 def show_results(experiment_values):
-    for i, experiment in enumerate(experiment_values):
-        iteration, agent_result, model_result = experiment_values[i]
-        print(agent_result)
+    print(experiment_values)
 
 
 if __name__ == "__main__":

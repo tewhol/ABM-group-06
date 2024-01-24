@@ -210,8 +210,7 @@ class Households(Agent):
             # check for each social connection whether there is enough similarity between the agents to warrant a
             # change in opinion
             if lower_bound_identity <= self.model.schedule.agents[agent].identity <= higher_bound_identity:
-                if self.model.schedule.agents[
-                    agent].is_adapted and random.random() < self.probability_positive_bias_change:
+                if self.model.schedule.agents[agent].is_adapted and random.random() < self.probability_positive_bias_change:
                     self.network_bias += self.bias_change_per_tick
                 if not self.model.schedule.agents[
                     agent].is_adapted and random.random() < self.probability_negative_bias_change:
