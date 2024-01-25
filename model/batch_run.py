@@ -1,6 +1,10 @@
 import random
 from model import AdaptationModel
 import mesa
+import matplotlib.pyplot as plt
+import networkx as nx
+import seaborn as sns
+import pandas as pd
 
 # Input values for the batch run as dictionary called parameters. Each key-value pair corresponds with a model input
 # variable and its defined input value. By declaring multiple input variables in a tuple the batch_run function of
@@ -58,6 +62,22 @@ number_processes = None  # how many processors are used
 data_collection_period = 1  # number of steps after which data is collected by the model and agent data collectors
 display_progress = True  # To display the progress on the batch runs
 
+
+def combine_results(results):
+    # Filter the results to only contain the data of one agent (the Gini coefficient will be the same for the entire population at any time) at the 100th step of each episode
+    results_df = pd.DataFrame(results)
+    results_filtered = results_df[(results_df.AgentID == 0) & (results_df.Step == 80)]
+    results_filtered[["iteration", "IsAdapted", "EndBias"]].reset_index(drop=True).head()
+    # Create a scatter plot
+    g = sns.scatterplot(data=results_filtered, x="IsAdapted", y="EndBias")
+    g.set(
+    xlabel="is Adapted",
+    ylabel="End Bias at the end of the run",
+    title="Bias vs adaption",
+    )
+    print(results_df.keys())
+    plt.show()
+
 if __name__ == "__main__":
     results = mesa.batch_run(
         AdaptationModel,
@@ -68,4 +88,4 @@ if __name__ == "__main__":
         data_collection_period=data_collection_period,
         display_progress=display_progress,
     )
-
+    combine_results(results)
