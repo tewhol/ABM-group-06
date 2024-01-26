@@ -70,8 +70,7 @@ def bias_change_over_time(results):
     # Create a scatter plot
     g = sns.lineplot(data=results_filtered,
                      x="Step",
-                     y="Bias",
-                     hue='AgentID')
+                     y="Bias")
     g.set(
     xlabel="Step",
     ylabel="Bias change in network",
