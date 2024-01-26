@@ -159,6 +159,9 @@ class AdaptationModel(Model):
         self.higher_bound_flood_severity_probability = higher_bound_flood_severity_probability
         self.random_seed = random_seed
 
+        # Necessary output variables
+        self.flood_damage_total = 0
+
         super().__init__(seed=self.random_seed)
 
         # generating the graph according to the network used and the network parameters specified
@@ -221,6 +224,7 @@ class AdaptationModel(Model):
         model_metrics = {
             "total_adapted_households": self.total_adapted_households,
             "bias_change_all_agents": self.total_bias_change_all_households,
+            "total_flood_damage": self.total_flood_damage
             # ... other reporters ...
         }
 
@@ -234,7 +238,7 @@ class AdaptationModel(Model):
             "FriendsCount": lambda a: a.count_friends(),
             "location": "location",
             "HasChild": "has_child",
-            "EndBias": "network_bias"
+            "Bias": "network_bias"
             # ... other reporters ...
         }
         # set up the data collector
@@ -294,6 +298,10 @@ class AdaptationModel(Model):
         """Return the total number of households that have adapted."""
         adapted_count = sum([1 for agent in self.schedule.agents if agent.is_adapted])
         return adapted_count
+
+    def total_flood_damage(self):
+        total_flood_damage = sum([agent.flood_damage_actual for agent in self.schedule.agents])
+        return total_flood_damage
 
     def total_bias_change_all_households(self):
         """Return the total amount of bias change of households"""
