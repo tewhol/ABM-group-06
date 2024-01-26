@@ -52,11 +52,11 @@ parameters = {
     'flood_impact_on_bias_factor': 1,
     'prob_positive_bias_change': 0.5,
     'prob_negative_bias_change': 0.1,
-    'adaption_threshold': 0.5
+    'adaption_threshold': 0.7
 }
 
 # Other input variables for the mesa batch run function
-iterations = 2  # number of iterations for each parameter combination
+iterations = 100  # number of iterations for each parameter combination
 max_steps = 80  # max steps of each model run/ iteration
 number_processes = None  # how many processors are used
 data_collection_period = 1  # number of steps after which data is collected by the model and agent data collectors
@@ -113,20 +113,69 @@ def total_number_of_damage(results):
 
 
 def sensitivity_analysis_adapted_threshold(results):
+    # use different scenarios by giving a list as different adaption threshold values in the parameters.
     results_df = pd.DataFrame(results)
     results_filtered = results_df[(results_df.Step == 80)]
     results_filtered[["iteration","adaption_threshold", "total_adapted_households"]].reset_index(drop=True).head()
-    print(results_filtered.keys())
+
     # Create a scatter plot
     g = sns.pointplot(data=results_filtered,
                       y="total_adapted_households",
                       linestyles='none',
-                      hue="adaption_threshold"
+                      hue="adaption_threshold",
                       )
     g.set(
         xlabel="adaption_threshold",
         ylabel="total_adapted_households",
         title="sensitivity of adaption threshold on total adapted households",
+    )
+    plt.show()
+
+
+def sensitivity_analysis_bias_change_probability(results):
+    results_df = pd.DataFrame(results)
+    results_filtered = results_df[(results_df.Step == 80)]
+    results_filtered[["iteration","adaption_threshold", "total_adapted_households"]].reset_index(drop=True).head()
+
+    # Combine multiple variables into one hue
+    results_filtered['combined_hue'] = (results_filtered['prob_positive_bias_change'].astype(str) +
+                                        " _ " + results_filtered['prob_negative_bias_change'].astype(str))
+
+    # Specify a custom color palette with 10 distinct colors
+    custom_palette = sns.color_palette("tab10", len(results_filtered['combined_hue'].unique()))
+
+    # Create a scatter plot
+    g = sns.scatterplot(data=results_filtered,
+                      x='total_adapted_households',
+                      y="bias_change_all_agents",
+                      hue='combined_hue',
+                      palette=custom_palette
+                      )
+    g.set(
+        xlabel="total_adapted_households",
+        ylabel="Total bias change all agents",
+        title="effects of different bias spread probabilities on the agents adaption",
+    )
+    plt.show()
+
+
+def different_adapted_threshold(results):
+    results_df = pd.DataFrame(results)
+    results_filtered = results_df
+    results_filtered[["iteration","adaption_threshold", "total_adapted_households"]].reset_index(drop=True).head()
+
+    custom_palette = sns.color_palette("tab10", 10)
+    # Create a scatter plot
+    g = sns.lineplot(data=results_filtered,
+                      x='Step',
+                      y="Bias",
+                      hue="adaption_threshold",
+                     palette=custom_palette
+                      )
+    g.set(
+        xlabel="Step",
+        ylabel="Agent Bias (positive is pro adaption, negative is against adaption)",
+        title="effects of different adaption thresholds on the agents bias towards adaption",
     )
     plt.show()
 
@@ -141,3 +190,6 @@ if __name__ == "__main__":
         data_collection_period=data_collection_period,
         display_progress=display_progress,
     )
+    number_of_adaptions(results)
+    total_number_of_damage(results)
+    bias_change_over_time(results)
