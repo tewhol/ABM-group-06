@@ -26,7 +26,7 @@ parameters = {
     'wealth_distribution_range_max': 3,
     'has_child_factor': 0.2,
     'has_child_distribution_type': 'B',
-    'has_child_distribution_value': 0.2,
+    'has_child_distribution_value': 0.4,
     'house_size_factor': 0.05,
     'house_size_distribution_type': 'UI',
     'house_size_distribution_range_min': 0,
@@ -56,26 +56,28 @@ parameters = {
 }
 
 # Other input variables for the mesa batch run function
-iterations = 1  # number of iterations for each parameter combination
+iterations = 10  # number of iterations for each parameter combination
 max_steps = 80  # max steps of each model run/ iteration
 number_processes = None  # how many processors are used
 data_collection_period = 1  # number of steps after which data is collected by the model and agent data collectors
 display_progress = True  # To display the progress on the batch runs
 
 
-def combine_results(results):
+def bias_change_over_time(results):
     # Filter the results to only contain the data of one agent (the Gini coefficient will be the same for the entire population at any time) at the 100th step of each episode
     results_df = pd.DataFrame(results)
-    results_filtered = results_df[(results_df.AgentID == 0) & (results_df.Step == 80)]
-    results_filtered[["iteration", "IsAdapted", "EndBias"]].reset_index(drop=True).head()
+    results_filtered = results_df
+    results_filtered[["Step", "EndBias"]].reset_index(drop=True).head()
     # Create a scatter plot
-    g = sns.scatterplot(data=results_filtered, x="IsAdapted", y="EndBias")
+    g = sns.lineplot(data=results_filtered,
+                     x="Step",
+                     y="EndBias",
+                     hue='AgentId')
     g.set(
-    xlabel="is Adapted",
-    ylabel="End Bias at the end of the run",
-    title="Bias vs adaption",
+    xlabel="Step",
+    ylabel="Bias change in network",
+    title="Bias change over time",
     )
-    print(results_df.keys())
     plt.show()
 
 if __name__ == "__main__":
@@ -88,4 +90,4 @@ if __name__ == "__main__":
         data_collection_period=data_collection_period,
         display_progress=display_progress,
     )
-    combine_results(results)
+    bias_change_over_time(results)
