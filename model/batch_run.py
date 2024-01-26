@@ -52,11 +52,11 @@ parameters = {
     'flood_impact_on_bias_factor': 1,
     'prob_positive_bias_change': 0.5,
     'prob_negative_bias_change': 0.1,
-    'adaption_threshold': 0.7
+    'adaption_threshold': 0.5
 }
 
 # Other input variables for the mesa batch run function
-iterations = 100  # number of iterations for each parameter combination
+iterations = 2  # number of iterations for each parameter combination
 max_steps = 80  # max steps of each model run/ iteration
 number_processes = None  # how many processors are used
 data_collection_period = 1  # number of steps after which data is collected by the model and agent data collectors
@@ -86,8 +86,8 @@ def number_of_adaptions(results):
     results_filtered[["total_adapted_households", "bias_change_all_agents"]].reset_index(drop=True).head()
     # Create a scatter plot
     g = sns.scatterplot(data=results_filtered,
-                     x="bias_change_all_agents",
-                     y="total_adapted_households")
+                        x="bias_change_all_agents",
+                        y="total_adapted_households")
     g.set(
     xlabel="Total bias change in network",
     ylabel="total adapted households",
@@ -102,14 +102,34 @@ def total_number_of_damage(results):
     results_filtered[["total_adapted_households", "total_flood_damage", "bias_change_all_agents"]].reset_index(drop=True).head()
     # Create a scatter plot
     g = sns.scatterplot(data=results_filtered,
-                     x="total_adapted_households",
-                     y="total_flood_damage")
+                        x="total_adapted_households",
+                        y="total_flood_damage")
     g.set(
     xlabel="total adapted households",
     ylabel="total flood damage",
     title="adaption vs flood damage",
     )
     plt.show()
+
+
+def sensitivity_analysis_adapted_threshold(results):
+    results_df = pd.DataFrame(results)
+    results_filtered = results_df[(results_df.Step == 80)]
+    results_filtered[["iteration","adaption_threshold", "total_adapted_households"]].reset_index(drop=True).head()
+    print(results_filtered.keys())
+    # Create a scatter plot
+    g = sns.pointplot(data=results_filtered,
+                      y="total_adapted_households",
+                      linestyles='none',
+                      hue="adaption_threshold"
+                      )
+    g.set(
+        xlabel="adaption_threshold",
+        ylabel="total_adapted_households",
+        title="sensitivity of adaption threshold on total adapted households",
+    )
+    plt.show()
+
 
 if __name__ == "__main__":
     results = mesa.batch_run(
@@ -121,5 +141,3 @@ if __name__ == "__main__":
         data_collection_period=data_collection_period,
         display_progress=display_progress,
     )
-    # bias_change_over_time(results)
-    bias_change_over_time(results)
