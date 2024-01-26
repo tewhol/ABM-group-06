@@ -81,7 +81,7 @@ class Households(Agent):
         self.age = 0  # Potential values: at least 18
         self.social_preference = 0  # Potential values: between introvert -1 and extrovert 1
         self.education_level = 0  # Potential values, integer: 0 low-level - 3 high-level education
-        self.identity = 0  # Potential values: between 0 and 1
+        self.identity = 0  # Identity value
 
         # Additional class attributes
         self.wealth_factor = wealth_factor
