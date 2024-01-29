@@ -15,12 +15,14 @@ def bias_change_over_time(results):
     # Create a scatter plot
     g = sns.lineplot(data=results_filtered,
                      x="Step",
-                     y="Bias")
+                     y="Bias",
+                     hue='wealth_factor')
     g.set(
         xlabel="Step",
         ylabel="Bias change in network",
         title="Bias change over time",
     )
+    plt.legend(title='Homogenous population (0 is yes, other is not)')
     plt.show()
 
 
@@ -31,12 +33,14 @@ def number_of_adaptions(results):
     # Create a scatter plot
     g = sns.scatterplot(data=results_filtered,
                         x="bias_change_all_agents",
-                        y="total_adapted_households")
+                        y="total_adapted_households",
+                        hue='wealth_factor')
     g.set(
         xlabel="Total bias change in network",
         ylabel="total adapted households",
         title="Bias change vs flood adaption",
     )
+    plt.legend(title='Homogenous population (0 is yes, other is not)')
     plt.show()
 
 
@@ -48,12 +52,14 @@ def total_number_of_damage(results):
     # Create a scatter plot
     g = sns.scatterplot(data=results_filtered,
                         x="total_adapted_households",
-                        y="total_flood_damage")
+                        y="total_flood_damage",
+                        hue='wealth_factor')
     g.set(
         xlabel="total adapted households",
         ylabel="total flood damage",
         title="adaption vs flood damage",
     )
+    plt.legend(title='Homogenous population (0 is yes, other is not)')
     plt.show()
 
 
@@ -67,11 +73,25 @@ display_progress = True  # To display the progress on the batch runs
 if __name__ == "__main__":
     results = mesa.batch_run(
         AdaptationModel,
-        parameters=config.parameters_sensitivity_adaption_threshold,
+        parameters=config.parameters,
         iterations=iterations,
         max_steps=max_steps,
         number_processes=number_processes,
         data_collection_period=data_collection_period,
         display_progress=display_progress,
     )
-    config.sensitivity_analysis_adapted_threshold(results)
+
+    results2 = mesa.batch_run(
+        AdaptationModel,
+        parameters=config.parameters_homogenous_experiment,
+        iterations=iterations,
+        max_steps=max_steps,
+        number_processes=number_processes,
+        data_collection_period=data_collection_period,
+        display_progress=display_progress,
+    )
+    results = results + results2
+    bias_change_over_time(results)
+    number_of_adaptions(results)
+    total_number_of_damage(results)
+
