@@ -553,6 +553,8 @@ parameters_flood_experiment = {
 
 
 # all mehtods to display results for all parameters
+# most of these are the same, but relate to different parameter inputs (different hues etc.)
+# Each function is named accordingly to which parameters they focus on.
 def sensitivity_analysis_adapted_threshold(results):
     # use different scenarios by giving a list as different adaption threshold values in the parameters.
     results_df = pd.DataFrame(results)
