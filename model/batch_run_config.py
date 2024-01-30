@@ -813,3 +813,58 @@ def high_and_low_prob_experiment_2(results):
     # Show the plot
     plt.show()
 
+
+def bias_change_over_time_homogenous(results):
+    results_df = pd.DataFrame(results)
+    results_filtered = results_df
+    results_filtered[["Step", "Bias"]].reset_index(drop=True).head()
+    # Create a scatter plot
+    g = sns.lineplot(data=results_filtered,
+                     x="Step",
+                     y="Bias",
+                     hue='wealth_factor')
+    g.set(
+        xlabel="Step",
+        ylabel="Bias change in network",
+        title="Bias change over time",
+    )
+    plt.legend(title='Homogenous population (0 is yes, other is not)')
+    plt.show()
+
+
+def number_of_adaptions_homogenous(results):
+    results_df = pd.DataFrame(results)
+    results_filtered = results_df[(results_df.Step == 80)]
+    results_filtered[["total_adapted_households", "bias_change_all_agents"]].reset_index(drop=True).head()
+    # Create a scatter plot
+    g = sns.scatterplot(data=results_filtered,
+                        x="bias_change_all_agents",
+                        y="total_adapted_households",
+                        hue='wealth_factor')
+    g.set(
+        xlabel="Total bias change in network",
+        ylabel="total adapted households",
+        title="Bias change vs flood adaption",
+    )
+    plt.legend(title='Homogenous population (0 is yes, other is not)')
+    plt.show()
+
+
+def total_number_of_damage_homogenous(results):
+    results_df = pd.DataFrame(results)
+    results_filtered = results_df[(results_df.Step == 80)]
+    results_filtered[["total_adapted_households", "total_flood_damage", "bias_change_all_agents"]].reset_index(
+        drop=True).head()
+    # Create a scatter plot
+    g = sns.scatterplot(data=results_filtered,
+                        x="total_adapted_households",
+                        y="total_flood_damage",
+                        hue='wealth_factor')
+    g.set(
+        xlabel="total adapted households",
+        ylabel="total flood damage",
+        title="adaption vs flood damage",
+    )
+    plt.legend(title='Homogenous population (0 is yes, other is not)')
+    plt.show()
+
