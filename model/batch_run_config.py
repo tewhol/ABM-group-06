@@ -18,7 +18,7 @@ parameters = {
     'prob_network_connection': 0.4,
     'num_edges': 3,
     'num_nearest_neighbours': 5,
-    'flood_time_ticks': 5,
+    'flood_time_ticks': 20,
     'lower_bound_flood_severity_probability': 0.5,
     'higher_bound_flood_severity_probability': 1.2,
     'random_seed': 1,
@@ -431,6 +431,52 @@ parameters_homogenous_experiment = {
     'prob_network_connection': 0.4,
     'num_edges': 3,
     'num_nearest_neighbours': 5,
+    'flood_time_ticks': 5,
+    'lower_bound_flood_severity_probability': 0.5,
+    'higher_bound_flood_severity_probability': 1.2,
+    'random_seed': 1,
+    'wealth_factor': 0.2,
+    'wealth_distribution_type': 'UI',
+    'wealth_distribution_range_min': 0,
+    'wealth_distribution_range_max': 3,
+    'has_child_factor': 0.2,
+    'has_child_distribution_type': 'B',
+    'has_child_distribution_value': 0.4,
+    'house_size_factor': 0.05,
+    'house_size_distribution_type': 'UI',
+    'house_size_distribution_range_min': 0,
+    'house_size_distribution_range_max': 2,
+    'house_type_factor': 0.05,
+    'house_type_distribution_type': 'UI',
+    'house_type_distribution_range_min': 0,
+    'house_type_distribution_range_max': 1,
+    'education_level_factor': 0.05,
+    'education_level_distribution_type': 'UI',
+    'education_level_distribution_range_min': 0,
+    'education_level_distribution_range_max': 3,
+    'social_preference_factor': 0.2,
+    'social_preference_distribution_type': 'U',
+    'social_preference_distribution_range_min': -1,
+    'social_preference_distribution_range_max': 1,
+    'age_factor': 0.2,
+    'age_distribution_type': 'N',
+    'age_distribution_mean': 33.4,
+    'age_distribution_std_dev': 5,
+    'household_tolerance': 0.15,
+    'bias_change_per_tick': 0.02,
+    'flood_impact_on_bias_factor': 1,
+    'prob_positive_bias_change': 0.5,
+    'prob_negative_bias_change': 0.1,
+    'adaption_threshold': 0.7
+}
+
+
+parameters_neighbors_experiment = {
+    'network_type': 'watts_strogatz',
+    'num_households': 50,
+    'prob_network_connection': 0.4,
+    'num_edges': 3,
+    'num_nearest_neighbours': [2, 5, 8],
     'flood_time_ticks': 5,
     'lower_bound_flood_severity_probability': 0.5,
     'higher_bound_flood_severity_probability': 1.2,
@@ -866,5 +912,104 @@ def total_number_of_damage_homogenous(results):
         title="adaption vs flood damage",
     )
     plt.legend(title='Homogenous population (0 is yes, other is not)')
+    plt.show()
+
+
+def bias_change_over_time_neighbors(results):
+    results_df = pd.DataFrame(results)
+    results_filtered = results_df
+    results_filtered[["Step", "Bias"]].reset_index(drop=True).head()
+    # Create a scatter plot
+    g = sns.lineplot(data=results_filtered,
+                     x="Step",
+                     y="Bias",
+                     hue='num_nearest_neighbours')
+    g.set(
+        xlabel="Step",
+        ylabel="Bias change in network",
+        title="Bias change over time",
+    )
+    plt.legend(title='Number of neighbors')
+    plt.show()
+
+
+def number_of_adaptions_neighbors(results):
+    results_df = pd.DataFrame(results)
+    results_filtered = results_df[(results_df.Step == 80)]
+    results_filtered[["total_adapted_households", "bias_change_all_agents"]].reset_index(drop=True).head()
+    # Create a scatter plot
+    g = sns.scatterplot(data=results_filtered,
+                        x="bias_change_all_agents",
+                        y="total_adapted_households",
+                        hue='num_nearest_neighbours')
+    g.set(
+        xlabel="Total bias change in network",
+        ylabel="total adapted households",
+        title="Bias change vs flood adaption",
+    )
+    plt.legend(title='Number of neighbors')
+    plt.show()
+
+
+def total_number_of_damage_neighbors(results):
+    results_df = pd.DataFrame(results)
+    results_filtered = results_df[(results_df.Step == 80)]
+    results_filtered[["total_adapted_households", "total_flood_damage", "bias_change_all_agents"]].reset_index(
+        drop=True).head()
+    # Create a scatter plot
+    g = sns.scatterplot(data=results_filtered,
+                        x="total_adapted_households",
+                        y="total_flood_damage",
+                        hue='num_nearest_neighbours')
+    g.set(
+        xlabel="total adapted households",
+        ylabel="total flood damage",
+        title="adaption vs flood damage",
+    )
+    plt.legend(title='Number of neighbors')
+    plt.show()
+
+
+def bias_change_distribution_by_neighbors(results):
+    results_df = pd.DataFrame(results)
+
+    # Create a boxplot
+    g = sns.boxplot(data=results_df,
+                    x='num_nearest_neighbours',
+                    y='bias_change_all_agents',)
+    g.set(
+        xlabel="Number of Neighbors",
+        ylabel="Bias Change",
+        title="Distribution of Bias Change for Each Neighbor Value",
+    )
+    plt.show()
+
+
+def pairplot_neighbors(results):
+    results_df = pd.DataFrame(results)
+
+    # Create a pairplot (warning: these take forever to make)
+    g = sns.pairplot(results_df,
+                     vars=["total_adapted_households", "bias_change_all_agents", "total_flood_damage"],
+                     hue='num_nearest_neighbours',
+                     )
+    g.fig.suptitle("Pairwise Relationships for Different Neighbors", y=1.02)
+    plt.show()
+
+
+def total_adapted_over_time_neighbors(results):
+    results_df = pd.DataFrame(results)
+
+    # Create a line plot
+    g = sns.lineplot(data=results_df,
+                     x="Step",
+                     y="total_adapted_households",
+                     hue='num_nearest_neighbours')
+    g.set(
+        xlabel="Step",
+        ylabel="Total Adapted Households",
+        title="Total Adapted Households Over Time for Different Neighbors",
+    )
+    plt.legend(title='Number of Neighbors')
     plt.show()
 
