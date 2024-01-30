@@ -77,15 +77,21 @@ if __name__ == "__main__":
 
     results2 = mesa.batch_run(
         AdaptationModel,
-        parameters=config.parameters_neighbors_experiment,
+        parameters=config.parameters_flood_experiment,
         iterations=iterations,
         max_steps=max_steps,
         number_processes=number_processes,
         data_collection_period=data_collection_period,
         display_progress=display_progress,
     )
-
     results = results + results2
+
+    config.bias_change_over_time_flood(results)
+    config.number_of_adaptions_flood(results)
+    config.total_number_of_damage_flood(results)
+    config.bias_change_distribution_by_flood(results)
+    config.pairplot_flood(results)
+    config.total_adapted_over_time_flood(results)
 
 
 

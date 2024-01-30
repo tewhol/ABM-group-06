@@ -7,7 +7,6 @@ import seaborn as sns
 import pandas as pd
 import batch_run_config as config
 
-
 # Input values for the batch run as dictionary called parameters. Each key-value pair corresponds with a model input
 # variable and its defined input value. By declaring multiple input variables in a tuple the batch_run function of
 # mesa can do different senarios in which it runs each possible combination of input variables from the parameter
@@ -57,7 +56,6 @@ parameters = {
     'adaption_threshold': 0.7
 }
 
-
 parameters_sensitivity_adaption_threshold = {
     'network_type': 'watts_strogatz',
     'num_households': 50,
@@ -102,7 +100,6 @@ parameters_sensitivity_adaption_threshold = {
     'prob_negative_bias_change': 0.1,
     'adaption_threshold': [0.35, 0.7, 1.15]
 }
-
 
 parameters_sensitivity_three_variables = {
     'network_type': 'watts_strogatz',
@@ -149,7 +146,6 @@ parameters_sensitivity_three_variables = {
     'adaption_threshold': [0.5, 0.6, 0.7, 0.8, 0.9]
 }
 
-
 parameters_sensitivity_households = {
     'network_type': 'watts_strogatz',
     'num_households': [25, 50, 75],
@@ -194,7 +190,6 @@ parameters_sensitivity_households = {
     'prob_negative_bias_change': 0.1,
     'adaption_threshold': 0.7
 }
-
 
 parameters_sensitivity_positive_prob = {
     'network_type': 'watts_strogatz',
@@ -241,7 +236,6 @@ parameters_sensitivity_positive_prob = {
     'adaption_threshold': 0.7
 }
 
-
 parameters_sensitivity_negative_prob = {
     'network_type': 'watts_strogatz',
     'num_households': 50,
@@ -287,7 +281,6 @@ parameters_sensitivity_negative_prob = {
     'adaption_threshold': 0.7
 }
 
-
 parameters_sensitivity_bias_change_per_tick = {
     'network_type': 'watts_strogatz',
     'num_households': 50,
@@ -332,7 +325,6 @@ parameters_sensitivity_bias_change_per_tick = {
     'prob_negative_bias_change': 0.1,
     'adaption_threshold': 0.7
 }
-
 
 parameters_sensitivity_household_tolerance = {
     'network_type': 'watts_strogatz',
@@ -424,13 +416,57 @@ parameters_four_prob_experiment = {
     'adaption_threshold': 0.7
 }
 
-
 parameters_homogenous_experiment = {
     'network_type': 'watts_strogatz',
     'num_households': 50,
     'prob_network_connection': 0.4,
     'num_edges': 3,
     'num_nearest_neighbours': 5,
+    'flood_time_ticks': 5,
+    'lower_bound_flood_severity_probability': 0.5,
+    'higher_bound_flood_severity_probability': 1.2,
+    'random_seed': 1,
+    'wealth_factor': 0,
+    'wealth_distribution_type': 'UI',
+    'wealth_distribution_range_min': 0,
+    'wealth_distribution_range_max': 3,
+    'has_child_factor': 0,
+    'has_child_distribution_type': 'B',
+    'has_child_distribution_value': 0.4,
+    'house_size_factor': 0,
+    'house_size_distribution_type': 'UI',
+    'house_size_distribution_range_min': 0,
+    'house_size_distribution_range_max': 2,
+    'house_type_factor': 0,
+    'house_type_distribution_type': 'UI',
+    'house_type_distribution_range_min': 0,
+    'house_type_distribution_range_max': 1,
+    'education_level_factor': 0,
+    'education_level_distribution_type': 'UI',
+    'education_level_distribution_range_min': 0,
+    'education_level_distribution_range_max': 3,
+    'social_preference_factor': 0,
+    'social_preference_distribution_type': 'U',
+    'social_preference_distribution_range_min': -1,
+    'social_preference_distribution_range_max': 1,
+    'age_factor': 0,
+    'age_distribution_type': 'N',
+    'age_distribution_mean': 33.4,
+    'age_distribution_std_dev': 5,
+    'household_tolerance': 0.15,
+    'bias_change_per_tick': 0.02,
+    'flood_impact_on_bias_factor': 1,
+    'prob_positive_bias_change': 0.5,
+    'prob_negative_bias_change': 0.1,
+    'adaption_threshold': 0.7
+}
+
+parameters_neighbors_experiment = {
+    'network_type': 'watts_strogatz',
+    'num_households': 50,
+    'prob_network_connection': 0.4,
+    'num_edges': 3,
+    'num_nearest_neighbours': [2, 5, 8],
     'flood_time_ticks': 5,
     'lower_bound_flood_severity_probability': 0.5,
     'higher_bound_flood_severity_probability': 1.2,
@@ -470,53 +506,50 @@ parameters_homogenous_experiment = {
     'adaption_threshold': 0.7
 }
 
-
-parameters_neighbors_experiment = {
+parameters_flood_experiment = {
     'network_type': 'watts_strogatz',
     'num_households': 50,
     'prob_network_connection': 0.4,
     'num_edges': 3,
-    'num_nearest_neighbours': [2, 5, 8],
-    'flood_time_ticks': 5,
-    'lower_bound_flood_severity_probability': 0.5,
-    'higher_bound_flood_severity_probability': 1.2,
+    'num_nearest_neighbours': 5,
+    'flood_time_ticks': 20,
+    'lower_bound_flood_severity_probability': 1.5,
+    'higher_bound_flood_severity_probability': 2.2,
     'random_seed': 1,
-    'wealth_factor': 0,
+    'wealth_factor': 0.2,
     'wealth_distribution_type': 'UI',
     'wealth_distribution_range_min': 0,
     'wealth_distribution_range_max': 3,
-    'has_child_factor': 0,
+    'has_child_factor': 0.2,
     'has_child_distribution_type': 'B',
     'has_child_distribution_value': 0.4,
-    'house_size_factor': 0.,
+    'house_size_factor': 0.05,
     'house_size_distribution_type': 'UI',
     'house_size_distribution_range_min': 0,
     'house_size_distribution_range_max': 2,
-    'house_type_factor': 0,
+    'house_type_factor': 0.05,
     'house_type_distribution_type': 'UI',
     'house_type_distribution_range_min': 0,
     'house_type_distribution_range_max': 1,
-    'education_level_factor': 0,
+    'education_level_factor': 0.05,
     'education_level_distribution_type': 'UI',
     'education_level_distribution_range_min': 0,
     'education_level_distribution_range_max': 3,
-    'social_preference_factor': 0,
+    'social_preference_factor': 0.2,
     'social_preference_distribution_type': 'U',
     'social_preference_distribution_range_min': -1,
     'social_preference_distribution_range_max': 1,
-    'age_factor': 0,
+    'age_factor': 0.2,
     'age_distribution_type': 'N',
     'age_distribution_mean': 33.4,
     'age_distribution_std_dev': 5,
     'household_tolerance': 0.15,
     'bias_change_per_tick': 0.02,
-    'flood_impact_on_bias_factor': 1,
+    'flood_impact_on_bias_factor': 2,
     'prob_positive_bias_change': 0.5,
     'prob_negative_bias_change': 0.1,
     'adaption_threshold': 0.7
 }
-
-
 
 
 # all mehtods to display results for all parameters
@@ -567,7 +600,8 @@ def sensitivity_analysis_households(results):
     # use different scenarios by giving a list as different household numbers in the parameters.
     results_df = pd.DataFrame(results)
     results_filtered = results_df[(results_df.Step == 80)]
-    results_filtered[["bias_change_all_agents", "num_households", "total_adapted_households", ]].reset_index(drop=True).head()
+    results_filtered[["bias_change_all_agents", "num_households", "total_adapted_households", ]].reset_index(
+        drop=True).head()
 
     # Create a figure with three subplots
     fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
@@ -611,7 +645,8 @@ def sensitivity_analysis_positive_chance(results):
     # values in the parameters.
     results_df = pd.DataFrame(results)
     results_filtered = results_df[(results_df.Step == 80)]
-    results_filtered[["iteration", "prob_positive_bias_change", "total_adapted_households"]].reset_index(drop=True).head()
+    results_filtered[["iteration", "prob_positive_bias_change", "total_adapted_households"]].reset_index(
+        drop=True).head()
 
     # Create a figure with three subplots
     fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
@@ -654,7 +689,8 @@ def sensitivity_analysis_negative_chance(results):
     # use different scenarios by giving a list as different adaption threshold values in the parameters.
     results_df = pd.DataFrame(results)
     results_filtered = results_df[(results_df.Step == 80)]
-    results_filtered[["iteration", "prob_negative_bias_change", "total_adapted_households"]].reset_index(drop=True).head()
+    results_filtered[["iteration", "prob_negative_bias_change", "total_adapted_households"]].reset_index(
+        drop=True).head()
 
     # Create a figure with three subplots
     fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
@@ -777,7 +813,6 @@ def sensitivity_analysis_household_tolerance(results):
 
     # Show the plots
     plt.show()
-
 
 
 def different_adapted_threshold(results):
@@ -976,7 +1011,7 @@ def bias_change_distribution_by_neighbors(results):
     # Create a boxplot
     g = sns.boxplot(data=results_df,
                     x='num_nearest_neighbours',
-                    y='bias_change_all_agents',)
+                    y='bias_change_all_agents', )
     g.set(
         xlabel="Number of Neighbors",
         ylabel="Bias Change",
@@ -1013,3 +1048,101 @@ def total_adapted_over_time_neighbors(results):
     plt.legend(title='Number of Neighbors')
     plt.show()
 
+
+def bias_change_over_time_flood(results):
+    results_df = pd.DataFrame(results)
+    results_filtered = results_df
+    results_filtered[["Step", "Bias"]].reset_index(drop=True).head()
+    # Create a scatter plot
+    g = sns.lineplot(data=results_filtered,
+                     x="Step",
+                     y="Bias",
+                     hue='flood_impact_on_bias_factor')
+    g.set(
+        xlabel="Step",
+        ylabel="Bias change in network",
+        title="Bias change over time",
+    )
+    plt.legend(title='Flood Impact on Bias')
+    plt.show()
+
+
+def number_of_adaptions_flood(results):
+    results_df = pd.DataFrame(results)
+    results_filtered = results_df[(results_df.Step == 80)]
+    results_filtered[["total_adapted_households", "bias_change_all_agents"]].reset_index(drop=True).head()
+    # Create a scatter plot
+    g = sns.scatterplot(data=results_filtered,
+                        x="bias_change_all_agents",
+                        y="total_adapted_households",
+                        hue='flood_impact_on_bias_factor')
+    g.set(
+        xlabel="Total bias change in network",
+        ylabel="total adapted households",
+        title="Bias change vs flood adaption",
+    )
+    plt.legend(title='Flood Impact on Bias')
+    plt.show()
+
+
+def total_number_of_damage_flood(results):
+    results_df = pd.DataFrame(results)
+    results_filtered = results_df[(results_df.Step == 80)]
+    results_filtered[["total_adapted_households", "total_flood_damage", "bias_change_all_agents"]].reset_index(
+        drop=True).head()
+    # Create a scatter plot
+    g = sns.scatterplot(data=results_filtered,
+                        x="total_adapted_households",
+                        y="total_flood_damage",
+                        hue='flood_impact_on_bias_factor')
+    g.set(
+        xlabel="total adapted households",
+        ylabel="total flood damage",
+        title="adaption vs flood damage",
+    )
+    plt.legend(title='Flood Impact on Bias')
+    plt.show()
+
+
+def bias_change_distribution_by_flood(results):
+    results_df = pd.DataFrame(results)
+
+    # Create a boxplot
+    g = sns.boxplot(data=results_df,
+                    x='flood_impact_on_bias_factor',
+                    y='bias_change_all_agents', )
+    g.set(
+        xlabel="Flood Impact on Bias",
+        ylabel="Bias Change",
+        title="Distribution of Bias Change for Different Flood Scenarios",
+    )
+    plt.show()
+
+
+def pairplot_flood(results):
+    results_df = pd.DataFrame(results)
+
+    # Create a pairplot (warning: these take forever to make)
+    g = sns.pairplot(results_df,
+                     vars=["total_adapted_households", "bias_change_all_agents", "total_flood_damage"],
+                     hue='flood_impact_on_bias_factor',
+                     )
+    g.fig.suptitle("Pairwise Relationships for Different Flood Scenarios", y=1.02)
+    plt.show()
+
+
+def total_adapted_over_time_flood(results):
+    results_df = pd.DataFrame(results)
+
+    # Create a line plot
+    g = sns.lineplot(data=results_df,
+                     x="Step",
+                     y="total_adapted_households",
+                     hue='flood_impact_on_bias_factor')
+    g.set(
+        xlabel="Step",
+        ylabel="Total Adapted Households",
+        title="Total Adapted Households Over Time for Different Flood Scenarios",
+    )
+    plt.legend(title='Flood Impact on Bias')
+    plt.show()
