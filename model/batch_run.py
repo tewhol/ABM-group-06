@@ -1,8 +1,6 @@
-import random
 from model import AdaptationModel
 import mesa
 import matplotlib.pyplot as plt
-import networkx as nx
 import seaborn as sns
 import pandas as pd
 import batch_run_config as config
